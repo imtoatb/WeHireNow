@@ -8,17 +8,17 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Middleware CORS
+//Middleware CORS
 app.use(cors({
   origin: "http://localhost:5173", // ton frontend (Vite/Vue)
   credentials: true,
 }));
 
-// ✅ Middleware JSON
+//Middleware JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Session setup
+//Session setup
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "wehirenow_secret",
@@ -32,16 +32,16 @@ app.use(
   })
 );
 
-// ✅ Test route
+// Test route
 app.get("/", (req, res) => {
-  res.send("✅ Backend is finally working with sessions!");
+  res.send("Backend is finally working with sessions!");
 });
 
-// ✅ Import routes
+// Import routes
 app.use("/api/auth", authRoutes);
 
-// ✅ Start server
+//Start server
 const PORT = process.env.PORT || 8085;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log("Server running on http://localhost:${PORT}");
 });

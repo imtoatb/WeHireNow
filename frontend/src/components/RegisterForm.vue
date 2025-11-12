@@ -31,10 +31,10 @@ const register = async () => {
       password: password.value,
       account_type: account_type.value,
     })
-    message.value = `✅ Account created for ${res.data.email}`
+    message.value = `Account created for ${res.data.email}`
   } catch (err) {
     console.error(err)
-    message.value = err.response?.data?.error || '❌ Registration failed'
+    message.value = err.response?.data?.error || 'Registration failed'
   }
 }
 </script>
