@@ -3,7 +3,11 @@
     <section class="hero">
       <h1>Find your next opportunity</h1>
       <p>Connecting talent with great companies worldwide.</p>
-      <button class="cta">Get Started</button>
+      <br/><br/>
+      <RouterLink to="/jobsearch" class="cta">Get Started</RouterLink>
+
+      <!--<button class="cta">Get Started</button>
+      -->
     </section>
 
     <section class="features">
