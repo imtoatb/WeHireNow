@@ -1,15 +1,18 @@
 <template>
-  <router-view />
+  <div id="app">
+    <HeaderBar />
+    <RouterView />
+    <FooterBar />
+  </div>
 </template>
 
-<script setup>
-/* Aucun code ici pour le moment */
+<script>
+import HeaderBar from "./components/HeaderBar.vue";
+import FooterBar from "./components/FooterBar.vue";
+
+export default {
+  components: { HeaderBar, FooterBar },
+};
 </script>
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-}
-</style>
+<style src="./assets/style.css"></style>
