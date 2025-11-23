@@ -3,31 +3,34 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 
-const auth = useAuthStore();
 const router = useRouter();
+const auth = useAuthStore();
 
 const email = ref("");
 const password = ref("");
 const account_type = ref("candidate");
 
-const handleRegister = async () => {
+const registerUser = async () => {
   await auth.register(email.value, password.value, account_type.value);
 
   if (auth.user) {
+    // Redirection selon le type de compte
     if (auth.user.account_type === "candidate") {
-      router.push("/profil-c");
+      router.push("/form-candidate");
     } else {
-      router.push("/profil-r");
+      router.push("/form-recruiter");
     }
   }
 };
 </script>
 
+
 <template>
   <div class="register">
     <h2>Créer un compte</h2>
 
-    <form @submit.prevent="handleRegister" class="register-form">
+    <form @submit.prevent="registerUser" class="register-form">
+
       <input v-model="email" type="email" placeholder="Email" required />
 
       <input v-model="password" type="password" placeholder="Mot de passe" required />
