@@ -15,14 +15,13 @@ body {
   color: #1F1F1F;
 }
 
-/* === MAIN LAYOUT === */
 .main-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* === HEADER === */
+/* header */
 .navbar {
   background-color: #754F44;
   color: white;
@@ -63,7 +62,7 @@ body {
   color: #754F44;
 }
 
-/* === HERO SECTION === */
+/* Main section */
 .hero {
   text-align: center;
   padding: 5rem 2rem;
@@ -104,7 +103,124 @@ body {
   transform: translateY(-3px);
 }
 
-/* === FEATURES === */
+/*Login page*/
+.login {
+  max-width: 380px;
+  margin: 80px auto;
+  background: #FAF6F2;
+  padding: 2rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  color: #3A2E2A;
+}
+
+.login h2 {
+  color: #754F44;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.login form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login input {
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #E8D9C5;
+  font-size: 1rem;
+  background-color: #fff;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.login input:focus {
+  border: 1px solid #EC7357;
+  box-shadow: 0 0 4px rgba(236, 115, 87, 0.5);
+  outline: none;
+}
+
+.login button {
+  background-color: #EC7357;
+  color: white;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.login button:hover {
+  background-color: #754F44;
+  transform: translateY(-2px);
+}
+
+
+/*Register page*/
+.register {
+  max-width: 380px;
+  margin: 80px auto;
+  background: #FAF6F2;
+  padding: 2rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  color: #3A2E2A;
+}
+
+.register h2 {
+  color: #754F44;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.register form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register input,
+.register select {
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #E8D9C5;
+  background: #fff;
+  font-size: 1rem;
+}
+
+.register input:focus,
+.register select:focus {
+  border-color: #EC7357;
+  box-shadow: 0 0 4px rgba(236,115,87,0.5);
+  outline: none;
+}
+
+.register button {
+  background-color: #EC7357;
+  color: white;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.register button:hover {
+  background-color: #754F44;
+  transform: translateY(-2px);
+}
+
+
+/* Features*/
 .features {
   display: flex;
   justify-content: center;
@@ -136,7 +252,7 @@ body {
   margin-bottom: 0.8rem;
 }
 
-/* === FOOTER === */
+/* Footer bar */
 .footer {
   background-color: #754F44;
   color: #FFFFFF;
@@ -146,7 +262,7 @@ body {
   margin-top: auto;
 }
 
-/* === RESPONSIVE === */
+/* Action */
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 2.3rem;

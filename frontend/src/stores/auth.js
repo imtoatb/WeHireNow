@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api from '../services/api' // adapte si ton fichier est ailleurs
+import api from '../services/api'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -11,7 +11,9 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       try {
         const res = await api.post('/auth/login', { email, password })
-        this.user = res.data.user
+        
+        // Le backend renvoie directement id, email, account_type
+        this.user = res.data
         this.error = null
       } catch (err) {
         console.error(err)
@@ -22,7 +24,9 @@ export const useAuthStore = defineStore('auth', {
     async register(email, password, account_type) {
       try {
         const res = await api.post('/auth/register', { email, password, account_type })
-        this.user = res.data.user
+        
+        // Même format pour register
+        this.user = res.data
         this.error = null
       } catch (err) {
         console.error(err)

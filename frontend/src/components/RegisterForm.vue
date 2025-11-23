@@ -9,6 +9,7 @@
         <option value="recruiter">Recruiter</option>
       </select>
       <button type="submit">Sign up</button>
+      <br />
     </form>
 
     <p v-if="message">{{ message }}</p>
