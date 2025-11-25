@@ -10,6 +10,10 @@ const jobRoutes = require("./src/routes/jobs");
 
 
 dotenv.config();
+//temp trj plsu
+console.log("DB USER =", process.env.DB_USER);
+console.log("DB PASSWORD =", process.env.DB_PASSWORD);
+//fin temp
 
 const app = express();
 
