@@ -138,12 +138,6 @@
             <span v-if="job.work_mode"> · {{ job.work_mode }}</span>
           </p>
 
-          <RouterLink 
-            :to="{ name: 'JobDetail', params: { id: job.id } }"
-            class="detail_btn"
-          >
-            View details
-          </RouterLink>
 
           <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn"> View details</RouterLink>
 
