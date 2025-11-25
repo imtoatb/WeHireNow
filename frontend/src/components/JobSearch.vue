@@ -138,9 +138,12 @@
             <span v-if="job.work_mode"> · {{ job.work_mode }}</span>
           </p>
 
-          <p class="desc">
-            {{ (job.description || job.desc || "").slice(0, 120) }}...
-          </p>
+          <RouterLink 
+            :to="{ name: 'JobDetail', params: { id: job.id } }"
+            class="detail_btn"
+          >
+            View details
+          </RouterLink>
 
           <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn"> View details</RouterLink>
 

@@ -1,73 +1,19 @@
-const express = require("express");
-const router = express.Router();
-const db = require("../models/db");
+// GET /api/jobs/:id  → single job by ID
+router.get("/:id", async (req, res) => {
+  console.log("🔥 DETAIL ROUTE HIT with id =", req.params.id);  // <= ICI
 
-// GET /api/jobs/search
-router.get("/search", async (req, res) => {
   try {
-    const {
-      contractTypes,
-      levels,
-      timeTypes,
-      workModes,
-      fields,
-      area,
-      keywords,
-    } = req.query;
+    const jobId = req.params.id;
 
-    let sql = "SELECT * FROM jobs WHERE 1=1";
-    const params = [];
+    const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [jobId]);
 
-    if (contractTypes) {
-      const list = contractTypes.split(",");
-      sql += ` AND contract_type IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
+    if (!rows.length) {
+      return res.status(404).json({ error: "Job not found" });
     }
 
-    if (levels) {
-      const list = levels.split(",");
-      sql += ` AND level IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (timeTypes) {
-      const list = timeTypes.split(",");
-      sql += ` AND time_type IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (workModes) {
-      const list = workModes.split(",");
-      sql += ` AND work_mode IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (fields) {
-      const list = fields.split(",");
-      sql += ` AND field IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (area) {
-      sql += " AND localisation LIKE ?";
-      params.push(`%${area}%`);
-    }
-
-    if (keywords) {
-      sql += " AND (name LIKE ? OR description LIKE ?)";
-      params.push(`%${keywords}%`, `%${keywords}%`);
-    }
-
-    const [rows] = await db.query(sql, params);
-
-    res.json(rows);
+    res.json(rows[0]);
   } catch (err) {
-    console.error("Job search error:", err);
+    console.error("Job detail error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
-
-module.exports = router;
