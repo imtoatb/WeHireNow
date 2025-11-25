@@ -142,9 +142,7 @@
             {{ (job.description || job.desc || "").slice(0, 120) }}...
           </p>
 
-          <router-link :to="`/job/${job.id}`" class="detail_btn">
-            View details
-          </router-link>
+          <RouterLink to="/jobdetail" class="detail_btn">View details</RouterLink>
         </li>
       </ul>
 
