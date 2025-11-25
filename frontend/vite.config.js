@@ -12,14 +12,13 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    port: 5173,
     proxy: {
-      // tout ce qui commence par /api est redirigé vers le backend
       '/api': {
-        target: 'http://localhost:8085',
+        target: 'http://localhost:8085',  // 👈 ton backend
         changeOrigin: true,
       },
     },
   },
 })
+
 

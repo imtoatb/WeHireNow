@@ -262,7 +262,10 @@ async function searchJobs() {
     //end of database connection
 
     //temporary connection
-    const res = await fetch(`/api/jobs/search?${params.toString()}`)
+    const res = await fetch(`/api/jobs/search?${params.toString()}`, {
+      credentials: "include",
+    })
+
 
 
     //end of temporary connection
