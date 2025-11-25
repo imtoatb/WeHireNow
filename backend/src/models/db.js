@@ -13,16 +13,16 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
-
-(async () => {
-  try {
-    const conn = await pool.getConnection();
-    const [r] = await conn.query('SELECT DATABASE() db, USER() usr, NOW() ts');
-    console.log('✅ MySQL ping OK:', r[0]);
-    conn.release();
-  } catch (e) {
-    console.error('❌ MySQL connection error:', e.message);
-  }
-})();
+//
+//(async () => {
+  //try {
+    //const conn = await pool.getConnection();
+    //const [r] = await conn.query('SELECT DATABASE() db, USER() usr, NOW() ts');
+    //console.log('✅ MySQL ping OK:', r[0]);
+    //conn.release();
+  //} catch (e) {
+    //console.error('❌ MySQL connection error:', e.message);
+  //}
+//})();
 
 module.exports = pool;

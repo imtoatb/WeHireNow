@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1,
+        "name": "Frontend Developer",
+        "company": "TechNova",
+        "localisation": "Paris",
+        "desc": "Frontend role with Vue.js.",
+        "contract_type": "CDI",
+        "level": "Junior",
+        "time_type": "Full-time",
+        "work_mode": "Hybride",
+        "field": "Informatique"
+    },
+    {
+        "id": 2,
+        "name": "Data Analyst Intern",
+        "company": "DataSphere",
+        "localisation": "Lyon",
+        "desc": "Internship working with analytics and datasets.",
+        "contract_type": "Internship",
+        "level": "Starter",
+        "time_type": "Full-time",
+        "work_mode": "Pr\u00e9sentiel",
+        "field": "Data / IA"
+    }
+]
