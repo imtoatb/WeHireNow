@@ -253,16 +253,17 @@ async function searchJobs() {
     }
 
     // database connection
-    const res = await fetch(
-      `http://localhost:8085/api/jobs/search?${params.toString()}`,
-      {
-        credentials: "include", 
-      }
-    )
+    //const res = await fetch(
+      //`http://localhost:8085/api/jobs/search?${params.toString()}`,
+      //{
+        //credentials: "include", 
+      //}
+    //)
     //end of database connection
 
     //temporary connection
-    //const res = await fetch('/sample_jobs.json')
+    const res = await fetch(`/api/jobs/search?${params.toString()}`)
+
 
     //end of temporary connection
 
