@@ -139,7 +139,7 @@
           </p>
 
           <p class="desc">
-            {{ job.desc ? job.desc.slice(0, 120) : "" }}...
+            {{ (job.description || job.desc || "").slice(0, 120) }}...
           </p>
 
           <router-link :to="`/job/${job.id}`" class="detail_btn">
@@ -253,16 +253,16 @@ async function searchJobs() {
     }
 
     // database connection
-    //const res = await fetch(
-      //`http://localhost:8085/api/jobs/search?${params.toString()}`,
-      //{
-        //credentials: "include", 
-      //}
-    //)
+    const res = await fetch(
+      `http://localhost:8085/api/jobs/search?${params.toString()}`,
+      {
+        credentials: "include", 
+      }
+    )
     //end of database connection
 
     //temporary connection
-    const res = await fetch('/sample_jobs.json')
+    //const res = await fetch('/sample_jobs.json')
 
     //end of temporary connection
 
