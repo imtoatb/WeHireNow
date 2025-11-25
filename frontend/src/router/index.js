@@ -3,6 +3,7 @@ import MainPage from '../components/MainPage.vue'
 import RegisterForm from '../components/RegisterForm.vue'
 import Login from '../components/Login.vue'
 import JobSearch from '../components/JobSearch.vue'
+import JobDetail from '../components/JobDetail.vue'
 
 const routes = [
   { path: '/', redirect: '/mainpage' },
@@ -10,6 +11,7 @@ const routes = [
   { path: '/register', component: RegisterForm },
   { path: '/login', component: Login },
   { path: '/jobsearch', name: 'JobSearch', component: JobSearch },
+  { path: '/jobs/:id', name: 'JobDetail', component: JobDetail}
 ]
 
 const router = createRouter({
