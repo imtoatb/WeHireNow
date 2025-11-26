@@ -1,13 +1,12 @@
 <template>
   <div class="job-detail">
-    <!-- Loading / Error states -->
+    <!-- Loading / Error -->
     <p v-if="loading" class="info">Loading job details…</p>
     <p v-else-if="error" class="error">{{ error }}</p>
 
     <!-- Job content -->
     <div v-else-if="job" class="card">
       <button class="back-btn" @click="goBack">← Back to jobs</button>
-      
 
       <h1 class="title">{{ job.name }}</h1>
       <p class="company">{{ job.company }}</p>
@@ -32,10 +31,8 @@
   </div>
 </template>
 
-
-
 <script setup>
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 
 const route = useRoute()
@@ -45,10 +42,11 @@ const job = ref(null)
 const loading = ref(false)
 const error = ref("")
 
-const jobId = computed(() => route.params.id)
+// GET job ID from URL
+const jobId = route.params.id
 
 function goBack() {
-  router.back()
+  router.push("/jobs") // ou router.back()
 }
 
 async function loadJob() {
@@ -56,8 +54,8 @@ async function loadJob() {
     loading.value = true
     error.value = ""
 
-    // Appelle ton backend via le proxy Vite (comme JobSearch)
-    const res = await fetch(`/api/jobs/${jobId.value}`, {
+    // EXACTEMENT comme JobSearch
+    const res = await fetch(`/api/jobs/${jobId}`, {
       credentials: "include",
     })
 
@@ -82,9 +80,45 @@ async function loadJob() {
 onMounted(loadJob)
 </script>
 
+<style scoped>
+.job-detail {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
+.card {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
 
+.back-btn {
+  background: transparent;
+  border: none;
+  color: #754f44;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
 
-<style>
+.title {
+  margin-bottom: 0;
+}
 
+.tags {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #754f44;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
 </style>
