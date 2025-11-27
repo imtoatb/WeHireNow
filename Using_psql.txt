@@ -1,0 +1,116 @@
+LANCEMENT DU PROJET (À faire dans l'ordre)
+
+1. POSTGRESQL dans psql
+
+-- Vérifier que la base existe
+\c wehirenow_db
+
+-- Vérifier les tables
+\dt
+
+-- Vérifier un profil
+SELECT * FROM candidate_profiles;
+SELECT * FROM users;
+
+Doit afficher :
+Routes profile chargées avec succès
+Routes /api/profile enregistrées avec succès  
+Server running on http://localhost:8085
+Connecté à PostgreSQL
+
+2.BACKEND dans le terminal 
+
+# Terminal 1 - Backend
+cd backend
+npm install
+node server.js
+
+
+
+3. FRONTEND dans le terminal
+
+# Terminal 2 - Frontend  
+cd frontend
+npm install
+npm run dev
+
+---------------------------------------------------------
+WeHireNow/
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── auth.js
+│   │   │   └── profile.js
+│   │   └── models/
+│   │       └── db.js
+│   │   
+|   ├── server.js
+│   └── .env
+└── frontend/
+    ├── src/
+    │   ├── components/
+    │   ├── stores/
+    │   │   └── auth.js
+    │   ├── router/
+    │   │   └── index.js
+    │   ├── services/
+    │   │   └── api.js
+    │   └── assets/
+    │       └── style.css
+    ├── App.vue
+    ├── main.js
+    ├── index.html
+    └── package.json
+
+--------------------------------------------------------------------
+
+
+\l          -- Liste toutes les bases
+
+Nom           | Propriétaire     | Encodage | Collationnement
+--------------|------------------|----------|-----------------
+postgres      | postgres         | UTF8     | French_France.1252
+template0     | postgres         | UTF8     | French_France.1252  
+template1     | postgres         | UTF8     | French_France.1252
+wehirenow_db  | wehirenow_user   | UTF8     | French_France.1252
+wehirenow_dev | postgres         | UTF8     | French_France.1252
+
+Signification :
+
+    postgres : Base de données par défaut
+
+    template0/template1 : Modèles pour créer de nouvelles bases
+
+    wehirenow_db : Votre base de production
+
+    wehirenow_dev : Votre base de développement
+
+
+
+\c wehirenow_db          -- Se connecter à la base
+\dt                      -- Lister les tables
+\d                       -- Voir tous les objets
+\d nom_table             -- Voir structure d'une table
+
+
+Liste des tables :
+Schéma | Nom  | Type  | Propriétaire
+-------|------|-------|-------------
+public | users| table | wehirenow_user
+
+Liste des relations :
+Schéma | Nom         | Type     | Propriétaire
+-------|-------------|----------|-------------
+public | users       | table    | wehirenow_user
+public | users_id_seq| séquence | wehirenow_user
+
+
+Signification :
+
+    users : Table principale contenant vos utilisateurs
+
+    users_id_seq : Séquence pour l'auto-incrément des IDs
+
+
+
+DELETE FROM users;        -- Delete all content from the table
