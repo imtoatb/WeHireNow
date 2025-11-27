@@ -37,20 +37,3 @@ async function handleLogin() {
   }
 }
 </script>
-
-<style>
-.login {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 3rem;
-}
-input {
-  padding: 0.5rem;
-  width: 200px;
-}
-button {
-  padding: 0.5rem 1rem;
-}
-</style>

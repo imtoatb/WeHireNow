@@ -8,12 +8,12 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
 });
 
-// Test de connexion
+// Test connection
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
-    console.error('❌ Erreur connexion PostgreSQL:', err);
+    console.error('Database connection error:', err);
   } else {
-    console.log('✅ Connecté à PostgreSQL, heure du serveur:', res.rows[0].now);
+    console.log('Connected to PostgreSQL, server time:', res.rows[0].now);
   }
 });
 

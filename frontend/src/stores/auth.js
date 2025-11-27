@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
         const res = await api.post('/auth/login', { email, password })
         this.user = res.data
         
-        // Charger le profil depuis PostgreSQL
+        // Load profile from PostgreSQL
         await this.loadProfileFromDB()
         
         this.error = null
@@ -47,12 +47,12 @@ export const useAuthStore = defineStore('auth', {
 
     async setProfile(profile) {
       if (!this.user) {
-        console.error('❌ Aucun utilisateur connecté');
+        console.error('No user connected');
         throw new Error('No user connected');
       }
       
       try {
-        console.log('🔄 Envoi du profil à l API...', {
+        console.log('Sending profile to API...', {
           hasImage: !!profile.profile_picture,
           imageSize: profile.profile_picture ? profile.profile_picture.length : 0,
           totalSkills: profile.skills ? profile.skills.length : 0,
@@ -62,10 +62,10 @@ export const useAuthStore = defineStore('auth', {
         // Create payload without image if too large
         const payload = { ...profile };
         if (payload.profile_picture && payload.profile_picture.length > 300 * 1024) {
-          console.warn('⚠️ Image trop volumineuse, envoi sans image');
+          console.warn('Image too large, sending without image');
           const imageSize = payload.profile_picture.length;
           delete payload.profile_picture;
-          console.log(`📸 Image retirée (${imageSize} bytes)`);
+          console.log(`Image removed (${imageSize} bytes)`);
         }
 
         const response = await api.post('/profile/save', {
@@ -74,19 +74,19 @@ export const useAuthStore = defineStore('auth', {
         });
         
         if (response.data.success) {
-          console.log('✅ Profil sauvegardé dans PostgreSQL');
+          console.log('Profile saved in PostgreSQL');
           // Update local profile with the data that was actually saved
           this.user.profile = { ...this.user.profile, ...payload };
           localStorage.setItem('user', JSON.stringify(this.user));
           return response.data;
         } else {
-          throw new Error(response.data.message || 'Erreur inconnue');
+          throw new Error(response.data.message || 'Unknown error');
         }
         
       } catch (error) {
-        console.error('❌ Erreur sauvegarde profil:', error);
+        console.error('Error saving profile:', error);
         
-        // Sauvegarde locale en fallback
+        // Local storage fallback
         this.user.profile = { ...this.user.profile, ...profile };
         localStorage.setItem('user', JSON.stringify(this.user));
         
@@ -108,13 +108,13 @@ export const useAuthStore = defineStore('auth', {
         if (response.data.success && response.data.profile) {
           this.user.profile = response.data.profile;
           localStorage.setItem('user', JSON.stringify(this.user));
-          console.log('✅ Profil chargé depuis la base de données');
+          console.log('Profile loaded from database');
         } else {
-          console.log('ℹ️ Aucun profil trouvé en base de données');
+          console.log('No profile found in database');
         }
       } catch (error) {
-        console.error('❌ Error loading profile from DB:', error);
-        // En cas d'erreur, charger depuis le localStorage
+        console.error('Error loading profile from DB:', error);
+        // On error, load from localStorage
         this.loadProfileFromLocalStorage();
       }
     },
@@ -124,10 +124,10 @@ export const useAuthStore = defineStore('auth', {
       
       const savedUser = JSON.parse(localStorage.getItem('user'))
       if (savedUser && savedUser.profile && savedUser.email === this.user.email) {
-        console.log('📁 Profil chargé depuis localStorage');
+        console.log('Profile loaded from localStorage');
         this.user.profile = savedUser.profile;
       } else {
-        console.log('ℹ️ Aucun profil trouvé dans localStorage');
+        console.log('No profile found in localStorage');
       }
     }
   },

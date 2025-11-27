@@ -4,14 +4,14 @@ const session = require("express-session");
 const dotenv = require("dotenv");
 const authRoutes = require("./src/routes/auth");
 
-console.log('🔍 Début du chargement du serveur...');
+console.log('Starting server...');
 
 try {
-  console.log('Tentative de chargement des routes profile...');
+  console.log('Loading profile routes...');
   const profileRoutes = require("./src/routes/profile");
-  console.log('Routes profile chargées avec succès');
+  console.log('Profile routes loaded successfully');
 } catch (error) {
-  console.error('ERREUR chargement routes profile:', error.message);
+  console.error('ERROR loading profile routes:', error.message);
   console.error('Stack trace:', error.stack);
 }
 
@@ -25,8 +25,8 @@ app.use(cors({
   credentials: true,
 }));
 
-// === AUGMENTEZ LA LIMITE DE TAILLE POUR LES REQUÊTES ===
-app.use(express.json({ limit: '10mb' })); // Augmentez de 1mb à 10mb
+// Increase payload size limit
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session setup
@@ -45,19 +45,19 @@ app.use(
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("Backend is finally working with sessions!");
+  res.send("Backend is working with sessions!");
 });
 
 // Import routes
 app.use("/api/auth", authRoutes);
 
 try {
-  console.log('Enregistrement des routes /api/profile...');
+  console.log('Registering /api/profile routes...');
   const profileRoutes = require("./src/routes/profile");
   app.use("/api/profile", profileRoutes);
-  console.log('Routes /api/profile enregistrées avec succès');
+  console.log('/api/profile routes registered successfully');
 } catch (error) {
-  console.error('ERREUR enregistrement routes profile:', error.message);
+  console.error('ERROR registering profile routes:', error.message);
 }
 
 // Start server

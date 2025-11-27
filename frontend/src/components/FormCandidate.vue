@@ -369,10 +369,10 @@ async function submitProfile() {
 
   try {
     await auth.setProfile(payload);
-    console.log("✅ Profile saved successfully, redirecting...");
+    console.log("Profile saved successfully, redirecting...");
     router.push("/profil-c");
   } catch (error) {
-    console.error("❌ Error saving profile:", error);
+    console.error("Error saving profile:", error);
     
     if (error.message.includes('413')) {
       alert('The data is too large. Please try with a smaller profile picture or remove some content.');
