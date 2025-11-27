@@ -18,6 +18,7 @@
       <!-- Image preview -->
       <div v-if="profile_picture" class="image-preview">
         <img :src="profile_picture" alt="Profile preview" class="preview-image" />
+        <button @click="removeImage" class="remove-image-btn">Remove Image</button>
       </div>
     </div>
 
@@ -120,18 +121,16 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const auth = useAuthStore();
 
-// Personal Information (Required)
-const first_name = ref(auth.user?.first_name || "");
-const last_name = ref(auth.user?.last_name || "");
-
-// Simple fields
+// Personal Information - Pre-fill with existing data
+const first_name = ref("");
+const last_name = ref("");
 const bio = ref("");
 const phone = ref("");
 const linkedin = ref("");
@@ -141,6 +140,39 @@ const profile_picture = ref("");
 // Skills
 const skills = ref([]);
 const newSkill = ref("");
+
+// Experience
+const experiences = ref([]);
+
+// Education
+const education = ref([]);
+
+// Activities
+const activities = ref([]);
+
+// Load existing profile data when component mounts
+onMounted(() => {
+  if (auth.user?.profile) {
+    loadExistingProfileData();
+  }
+});
+
+// Function to load existing profile data
+const loadExistingProfileData = () => {
+  const profile = auth.user.profile;
+  
+  first_name.value = profile.first_name || "";
+  last_name.value = profile.last_name || "";
+  bio.value = profile.bio || "";
+  phone.value = profile.phone || "";
+  linkedin.value = profile.linkedin || "";
+  github.value = profile.github || "";
+  profile_picture.value = profile.profile_picture || "";
+  skills.value = profile.skills || [];
+  experiences.value = profile.experiences || [];
+  education.value = profile.educations || [];
+  activities.value = profile.activities || [];
+};
 
 function addSkill() {
   if (newSkill.value.trim() !== "") {
@@ -152,9 +184,6 @@ function addSkill() {
 function removeSkill(index) {
   skills.value.splice(index, 1);
 }
-
-// Experience
-const experiences = ref([]);
 
 function addExperience() {
   experiences.value.push({ 
@@ -169,9 +198,6 @@ function removeExperience(index) {
   experiences.value.splice(index, 1);
 }
 
-// Education
-const education = ref([]);
-
 function addEducation() {
   education.value.push({ 
     degree: "", 
@@ -185,9 +211,6 @@ function removeEducation(index) {
   education.value.splice(index, 1);
 }
 
-// Activities
-const activities = ref([]);
-
 function addActivity() {
   activities.value.push({ 
     name: "", 
@@ -200,40 +223,97 @@ function removeActivity(index) {
   activities.value.splice(index, 1);
 }
 
-// Image handling
+// Remove image
+function removeImage() {
+  profile_picture.value = "";
+}
+
+// Image compression function
+function compressImage(file, maxWidth = 400, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw compressed image
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Convert to blob with reduced quality
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            }));
+          } else {
+            reject(new Error('Canvas to Blob conversion failed'));
+          }
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// Image handling with compression
 async function handleImage(event) {
   const file = event.target.files[0];
-  if (file) {
-    console.log("Selected image:", file);
+  if (!file) return;
+
+  console.log("Selected image:", file);
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
+  
+  // Reduce max size to 500KB
+  if (file.size > 500 * 1024) {
+    alert('Image size should be less than 500KB. Compressing...');
+  }
+  
+  try {
+    // Compress image
+    const compressedImage = await compressImage(file);
+    console.log("Image compressed:", compressedImage);
     
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
-      return;
-    }
-    
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image size should be less than 2MB');
-      return;
-    }
-    
-    // Convert file to base64 for storage
     const reader = new FileReader();
     reader.onload = (e) => {
       profile_picture.value = e.target.result;
-      console.log("Image converted to base64");
+      console.log("Image converted to base64, size:", e.target.result.length, "bytes");
     };
     reader.onerror = (error) => {
       console.error('Error reading file:', error);
       alert('Error reading image file');
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(compressedImage);
+  } catch (error) {
+    console.error('Error processing image:', error);
+    alert('Error processing image');
   }
 }
 
-// Submit
-function submitProfile() {
+// Submit with size validation
+async function submitProfile() {
   // Basic validation
   if (!first_name.value.trim()) {
     alert('Please enter your first name');
@@ -257,7 +337,6 @@ function submitProfile() {
     phone: phone.value,
     linkedin: linkedin.value,
     github: github.value,
-    profile_picture: profile_picture.value,
     skills: skills.value,
     experiences: experiences.value,
     educations: education.value,
@@ -265,12 +344,42 @@ function submitProfile() {
     email: auth.user.email,
   };
 
-  console.log("PROFILE DATA TO SEND:", payload);
+  // Check image size before sending
+  if (profile_picture.value) {
+    const base64Size = profile_picture.value.length;
+    console.log("Final image size:", base64Size, "bytes");
+    
+    // If image exceeds 300KB, don't send it
+    if (base64Size > 300 * 1024) {
+      alert('Image too large after compression. Please use a smaller image or remove it.');
+      return;
+    }
+    
+    payload.profile_picture = profile_picture.value;
+  }
 
-  // Save to Pinia store
-  auth.setProfile(payload);
+  console.log("PROFILE DATA TO SEND:", {
+    hasImage: !!payload.profile_picture,
+    imageSize: payload.profile_picture ? payload.profile_picture.length : 0,
+    totalSkills: payload.skills.length,
+    totalExperiences: payload.experiences.length,
+    totalEducations: payload.educations.length,
+    totalActivities: payload.activities.length
+  });
 
-  // Redirect to profile page
-  router.push("/profil-c");
+  try {
+    await auth.setProfile(payload);
+    console.log("✅ Profile saved successfully, redirecting...");
+    router.push("/profil-c");
+  } catch (error) {
+    console.error("❌ Error saving profile:", error);
+    
+    if (error.message.includes('413')) {
+      alert('The data is too large. Please try with a smaller profile picture or remove some content.');
+    } else {
+      alert("Error saving profile: " + error.message);
+    }
+  }
 }
 </script>
+

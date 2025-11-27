@@ -4,19 +4,16 @@ const session = require("express-session");
 const dotenv = require("dotenv");
 const authRoutes = require("./src/routes/auth");
 
-// === AJOUTEZ CE CODE DE DÉBOGAGE ===
 console.log('🔍 Début du chargement du serveur...');
 
-// Test 1: Vérifier si le fichier profile.js existe
 try {
-  console.log('🔄 Tentative de chargement des routes profile...');
+  console.log('Tentative de chargement des routes profile...');
   const profileRoutes = require("./src/routes/profile");
-  console.log('✅ Routes profile chargées avec succès');
+  console.log('Routes profile chargées avec succès');
 } catch (error) {
-  console.error('❌ ERREUR chargement routes profile:', error.message);
-  console.error('❌ Stack trace:', error.stack);
+  console.error('ERREUR chargement routes profile:', error.message);
+  console.error('Stack trace:', error.stack);
 }
-// === FIN DU CODE DE DÉBOGAGE ===
 
 dotenv.config();
 
@@ -28,9 +25,9 @@ app.use(cors({
   credentials: true,
 }));
 
-// Middleware JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// === AUGMENTEZ LA LIMITE DE TAILLE POUR LES REQUÊTES ===
+app.use(express.json({ limit: '10mb' })); // Augmentez de 1mb à 10mb
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session setup
 app.use(
@@ -54,16 +51,14 @@ app.get("/", (req, res) => {
 // Import routes
 app.use("/api/auth", authRoutes);
 
-// === AJOUTEZ CE CODE POUR L'ENREGISTREMENT ===
 try {
-  console.log('🔄 Enregistrement des routes /api/profile...');
+  console.log('Enregistrement des routes /api/profile...');
   const profileRoutes = require("./src/routes/profile");
   app.use("/api/profile", profileRoutes);
-  console.log('✅ Routes /api/profile enregistrées avec succès');
+  console.log('Routes /api/profile enregistrées avec succès');
 } catch (error) {
-  console.error('❌ ERREUR enregistrement routes profile:', error.message);
+  console.error('ERREUR enregistrement routes profile:', error.message);
 }
-// === FIN DU CODE ===
 
 // Start server
 const PORT = process.env.PORT || 8085;
