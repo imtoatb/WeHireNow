@@ -3,7 +3,7 @@ import api from '../services/api'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem('user')) || null,
     error: null,
   }),
 
@@ -11,9 +11,11 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       try {
         const res = await api.post('/auth/login', { email, password })
-        
-        // Le backend renvoie directement id, email, account_type
         this.user = res.data
+        
+        // Charger le profil depuis PostgreSQL
+        await this.loadProfileFromDB()
+        
         this.error = null
       } catch (err) {
         console.error(err)
@@ -24,8 +26,6 @@ export const useAuthStore = defineStore('auth', {
     async register(email, password, account_type) {
       try {
         const res = await api.post('/auth/register', { email, password, account_type })
-        
-        // Même format pour register
         this.user = res.data
         this.error = null
       } catch (err) {
@@ -37,6 +37,66 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       await api.post('/auth/logout')
       this.user = null
+      localStorage.removeItem('user')
     },
+
+    // SAUVEGARDE CORRIGÉE - Appelle l'API
+    async setProfile(profile) {
+      if (!this.user) {
+        console.error('❌ Aucun utilisateur connecté');
+        return;
+      }
+      
+      try {
+        console.log('🔄 Envoi du profil à l API...', profile);
+        
+        // APPEL API CRITIQUE - Sauvegarde dans PostgreSQL
+        const response = await api.post('/profile/save', {
+          email: this.user.email,
+          ...profile
+        });
+        
+        if (response.data.success) {
+          console.log('✅ Profil sauvegardé dans PostgreSQL');
+          this.user.profile = profile;
+          localStorage.setItem('user', JSON.stringify(this.user));
+        } else {
+          throw new Error(response.data.message || 'Erreur inconnue');
+        }
+        
+      } catch (error) {
+        console.error('❌ Erreur sauvegarde profil:', error);
+        // Fallback: sauvegarde locale seulement
+        this.user.profile = profile;
+        localStorage.setItem('user', JSON.stringify(this.user));
+        alert('Attention: Le profil a été sauvegardé localement mais pas dans la base de données. Erreur: ' + error.message);
+      }
+    },
+
+    // Charger le profil depuis PostgreSQL
+async loadProfileFromDB() {
+  if (!this.user) return
+  
+  try {
+    const response = await api.get(`/profile/${this.user.email}`)
+    if (response.data.success && response.data.profile) {
+      this.user.profile = response.data.profile;
+      localStorage.setItem('user', JSON.stringify(this.user));
+    }
+  } catch (error) {
+    console.error('Error loading profile from DB:', error);
+  }
+},
+
+    // Fallback: charger depuis localStorage
+    loadProfileFromLocalStorage() {
+      if (!this.user) return
+      
+      const savedUser = JSON.parse(localStorage.getItem('user'))
+      if (savedUser && savedUser.profile && savedUser.email === this.user.email) {
+        console.log('📁 Profil chargé depuis localStorage');
+        this.user.profile = savedUser.profile;
+      }
+    }
   },
 })
