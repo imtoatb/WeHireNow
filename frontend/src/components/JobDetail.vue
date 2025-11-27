@@ -24,6 +24,8 @@
       <p class="description">
         {{ job.description || job.desc || "No description provided." }}
       </p>
+
+      <!--<button class="apply-btn">Apply</button> allow the register user to apply, if not register, alert not register do you want to register to continue?-->
     </div>
 
     <!-- Not found -->
@@ -121,4 +123,15 @@ onMounted(loadJob)
   border-radius: 999px;
   font-size: 0.8rem;
 }
+
+.apply-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: #754F44;
+  color: white;
+}
+  
 </style>
