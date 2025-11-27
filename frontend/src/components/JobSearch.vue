@@ -18,7 +18,7 @@
             {{ type }}
           </button>
         </div>
-      </div>
+      </div> 
 
       <!-- LEVEL -->
       <div class="filter-group">

@@ -9,7 +9,7 @@
       <button class="back-btn" @click="goBack">← Back to jobs</button>
 
       <h1 class="title">{{ job.name }}</h1>
-      <p class="company">{{ job.company }}</p>
+      <p class="company">{{ job.company }}</p> 
       <p class="location">{{ job.localisation }}</p>
 
       <div class="tags">
