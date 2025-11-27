@@ -74,26 +74,19 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Charger le profil depuis PostgreSQL
-    async loadProfileFromDB() {
-      if (!this.user) return
-      
-      try {
-        console.log('🔄 Chargement du profil depuis la DB...');
-        const response = await api.get(`/profile/${this.user.email}`)
-        
-        if (response.data.success && response.data.profile) {
-          console.log('✅ Profil chargé depuis PostgreSQL');
-          this.user.profile = response.data.profile;
-          localStorage.setItem('user', JSON.stringify(this.user));
-        } else {
-          console.log('ℹ️ Aucun profil trouvé en base');
-        }
-      } catch (error) {
-        console.error('❌ Erreur chargement profil DB:', error);
-        // Fallback: charger depuis localStorage
-        this.loadProfileFromLocalStorage();
-      }
-    },
+async loadProfileFromDB() {
+  if (!this.user) return
+  
+  try {
+    const response = await api.get(`/profile/${this.user.email}`)
+    if (response.data.success && response.data.profile) {
+      this.user.profile = response.data.profile;
+      localStorage.setItem('user', JSON.stringify(this.user));
+    }
+  } catch (error) {
+    console.error('Error loading profile from DB:', error);
+  }
+},
 
     // Fallback: charger depuis localStorage
     loadProfileFromLocalStorage() {

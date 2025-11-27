@@ -1,25 +1,17 @@
 <script setup>
 import { useAuthStore } from "../stores/auth";
-import { onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { onMounted, ref, watch } from "vue";
 
 const auth = useAuthStore();
+const router = useRouter();
 
-// Charger le profil au montage du composant
-onMounted(() => {
-  if (auth.user && !auth.user.profile) {
-    // Vérifiez d'abord que la fonction existe
-    if (auth.loadProfile && typeof auth.loadProfile === 'function') {
-      auth.loadProfile();
-    }
-  }
-});
-
-// Profil avec valeurs par défaut - version sécurisée
-const profile = auth.user?.profile || {
-  first_name: auth.user?.first_name || "",
-  last_name: auth.user?.last_name || "",
+// Use reactive profile data
+const profile = ref({
+  first_name: "",
+  last_name: "",
   bio: "",
-  email: auth.user?.email || "",
+  email: "",
   phone: "",
   linkedin: "",
   github: "",
@@ -28,6 +20,58 @@ const profile = auth.user?.profile || {
   experiences: [],
   educations: [],
   activities: []
+});
+
+// Load profile when component mounts
+onMounted(() => {
+  loadProfileData();
+});
+
+// Watch for auth.user changes (when profile gets updated)
+watch(() => auth.user?.profile, (newProfile) => {
+  if (newProfile) {
+    profile.value = { ...profile.value, ...newProfile };
+  }
+}, { deep: true });
+
+// Function to load profile data
+const loadProfileData = () => {
+  if (auth.user) {
+    // First try to load from auth store (most recent data)
+    if (auth.user.profile) {
+      profile.value = { ...profile.value, ...auth.user.profile };
+    }
+    
+    // Then try to load from database via API
+    if (auth.loadProfileFromDB && typeof auth.loadProfileFromDB === 'function') {
+      auth.loadProfileFromDB().then(() => {
+        // Update with fresh data from DB
+        if (auth.user?.profile) {
+          profile.value = { ...profile.value, ...auth.user.profile };
+        }
+      });
+    } else if (auth.loadProfile && typeof auth.loadProfile === 'function') {
+      auth.loadProfile();
+      if (auth.user?.profile) {
+        profile.value = { ...profile.value, ...auth.user.profile };
+      }
+    }
+  }
+};
+
+// Logout function
+const handleLogout = async () => {
+  try {
+    await auth.logout();
+    router.push('/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+};
+
+// Function to edit profile
+const handleEditProfile = () => {
+  router.push('/form-candidate');
 };
 
 const getInitials = (fullName) => {
@@ -42,9 +86,9 @@ const getInitials = (fullName) => {
 
 const getAccountTypeDisplay = (accountType) => {
   const types = {
-    'candidate': 'Candidat',
-    'recruiter': 'Recruteur', 
-    'company': 'Entreprise'
+    'candidate': 'Candidate',
+    'recruiter': 'Recruiter', 
+    'company': 'Company'
   };
   return types[accountType] || accountType;
 };
@@ -53,13 +97,13 @@ const getAccountTypeDisplay = (accountType) => {
 <template>
   <div class="profile-container">
     <div v-if="auth.user">
-      <!-- Bandeau avec photo et nom -->
+      <!-- Header with photo, name and buttons -->
       <div class="header-profil">
         <div class="profile-picture-container">
           <img 
             v-if="profile.profile_picture" 
             :src="profile.profile_picture" 
-            alt="Photo de profil" 
+            alt="Profile Picture" 
             class="profile-picture"
           />
           <div v-else class="profile-picture-placeholder">
@@ -69,78 +113,91 @@ const getAccountTypeDisplay = (accountType) => {
         
         <div class="profile-info">
           <h1 class="profile-name">
-            {{ profile.first_name || 'Prénom' }} {{ profile.last_name || 'Nom' }}
+            {{ profile.first_name || 'First Name' }} {{ profile.last_name || 'Last Name' }}
           </h1>
           <p class="profile-title">
             {{ getAccountTypeDisplay(auth.user.account_type) }}
           </p>
         </div>
+
+        <!-- Action buttons -->
+        <div class="profile-actions">
+          <button @click="handleEditProfile" class="btn-edit">
+            ✏️ Edit Profile
+          </button>
+          <button @click="loadProfileData" class="btn-refresh">
+            🔄 Refresh
+          </button>
+          <button @click="handleLogout" class="btn-logout">
+            🚪 Logout
+          </button>
+        </div>
       </div>
 
       <div class="profile-content-spacer"></div>
 
-      <!-- Détails du profil -->
+      <!-- Profile details -->
       <div class="profile-details">
         <!-- Bio -->
         <div class="bio card">
-          <h2>À propos de moi</h2>
-          <p class="bio-content">{{ profile.bio || "Aucune bio renseignée" }}</p>
+          <h2>About Me</h2>
+          <p class="bio-content">{{ profile.bio || "No bio provided" }}</p>
         </div>
 
         <!-- Contact -->
         <div class="contact-info card">
-          <h2>Informations de contact</h2>
+          <h2>Contact Information</h2>
           <div class="contact-grid">
             <div class="contact-item">
-              <span class="contact-label">Email :</span>
-              <span class="contact-value">{{ profile.email }}</span>
+              <span class="contact-label">Email:</span>
+              <span class="contact-value">{{ auth.user.email || profile.email }}</span>
             </div>
             <div class="contact-item">
-              <span class="contact-label">Téléphone :</span>
-              <span class="contact-value">{{ profile.phone || "Non renseigné" }}</span>
+              <span class="contact-label">Phone:</span>
+              <span class="contact-value">{{ profile.phone || "Not provided" }}</span>
             </div>
             <div class="contact-item">
-              <span class="contact-label">LinkedIn :</span>
-              <span class="contact-value">{{ profile.linkedin || "Non renseigné" }}</span>
+              <span class="contact-label">LinkedIn:</span>
+              <span class="contact-value">{{ profile.linkedin || "Not provided" }}</span>
             </div>
             <div class="contact-item">
-              <span class="contact-label">GitHub :</span>
-              <span class="contact-value">{{ profile.github || "Non renseigné" }}</span>
+              <span class="contact-label">GitHub:</span>
+              <span class="contact-value">{{ profile.github || "Not provided" }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Compétences -->
+        <!-- Skills -->
         <div class="skills-section card">
-          <h2>Compétences</h2>
+          <h2>Skills</h2>
           <div class="skills-grid" v-if="profile.skills && profile.skills.length > 0">
             <span class="skill-tag" v-for="skill in profile.skills" :key="skill">
               {{ skill }}
             </span>
           </div>
-          <p v-else class="no-data">Aucune compétence renseignée</p>
+          <p v-else class="no-data">No skills added</p>
         </div>
 
-        <!-- Expériences -->
+        <!-- Experience -->
         <div class="experience-section card">
-          <h2>Expériences professionnelles</h2>
+          <h2>Professional Experience</h2>
           <div v-if="profile.experiences && profile.experiences.length > 0">
             <div
               v-for="(experience, index) in profile.experiences"
               :key="index"
               class="experience-item"
             >
-              <h3>{{ experience.position }} chez {{ experience.company }}</h3>
+              <h3>{{ experience.position }} at {{ experience.company }}</h3>
               <p class="experience-duration">{{ experience.duration }}</p>
               <p class="experience-description">{{ experience.description }}</p>
             </div>
           </div>
-          <p v-else class="no-data">Aucune expérience renseignée</p>
+          <p v-else class="no-data">No experience added</p>
         </div>
 
-        <!-- Formation -->
+        <!-- Education -->
         <div class="education-section card">
-          <h2>Formation</h2>
+          <h2>Education</h2>
           <div v-if="profile.educations && profile.educations.length > 0">
             <div
               v-for="(education, index) in profile.educations"
@@ -152,12 +209,12 @@ const getAccountTypeDisplay = (accountType) => {
               <p class="education-description">{{ education.description }}</p>
             </div>
           </div>
-          <p v-else class="no-data">Aucune formation renseignée</p>
+          <p v-else class="no-data">No education added</p>
         </div>
 
-        <!-- Activités -->
+        <!-- Activities -->
         <div class="activity-section card">
-          <h2>Activités</h2>
+          <h2>Activities</h2>
           <div v-if="profile.activities && profile.activities.length > 0">
             <div
               v-for="(activity, index) in profile.activities"
@@ -169,12 +226,12 @@ const getAccountTypeDisplay = (accountType) => {
               <p class="activity-description">{{ activity.description }}</p>
             </div>
           </div>
-          <p v-else class="no-data">Aucune activité renseignée</p>
+          <p v-else class="no-data">No activities added</p>
         </div>
       </div>
     </div>
     <div v-else class="not-connected">
-      <p>Veuillez vous connecter pour voir votre profil</p>
+      <p>Please log in to view your profile</p>
     </div>
   </div>
 </template>

@@ -73,19 +73,3 @@ function submitProfile() {
 }
 </script>
 
-<style scoped>
-.form-container {
-  max-width: 700px;
-  margin: auto;
-  padding: 40px;
-}
-.form-section {
-  margin-bottom: 25px;
-  display: flex;
-  flex-direction: column;
-}
-.submit-btn {
-  margin-top: 20px;
-  padding: 12px 20px;
-}
-</style>
