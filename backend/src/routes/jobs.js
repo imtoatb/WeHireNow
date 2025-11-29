@@ -85,4 +85,52 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+
+// POST /api/jobs  → créer une nouvelle offre
+router.post('/', async (req, res) => {
+  try {
+    const {
+      name,
+      company,
+      localisation,
+      description,
+      contract_type,
+      level,
+      time_type,
+      work_mode,
+      field,
+    } = req.body
+
+    if (!name || !company) {
+      return res.status(400).json({ error: 'Name and company are required' })
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO jobs
+       (name, company, localisation, description, contract_type, level, time_type, work_mode, field)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        company,
+        localisation || '',
+        description || '',
+        contract_type || '',
+        level || '',
+        time_type || '',
+        work_mode || '',
+        field || '',
+      ]
+    )
+
+    // renvoyer le job créé avec son id
+    const [rows] = await db.query('SELECT * FROM jobs WHERE id = ?', [result.insertId])
+    res.status(201).json(rows[0])
+  } catch (err) {
+    console.error('Create job error:', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+
+
 module.exports = router;

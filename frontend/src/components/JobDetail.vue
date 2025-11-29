@@ -25,7 +25,9 @@
         {{ job.description || job.desc || "No description provided." }}
       </p>
 
-      <!--<button class="apply-btn">Apply</button> allow the register user to apply, if not register, alert not register do you want to register to continue?-->
+      <button class="apply-btn" @click="applyToJob"> Apply </button>
+
+
     </div>
 
     <!-- Not found -->
@@ -36,6 +38,8 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
+  import { useAuthStore } from "../stores/auth"
+
 
 const route = useRoute()
 const router = useRouter()
@@ -48,7 +52,7 @@ const error = ref("")
 const jobId = route.params.id
 
 function goBack() {
-  router.push("/jobs") // ou router.back()
+  router.push({ name: "JobSearch" }) 
 }
 
 async function loadJob() {
@@ -77,6 +81,38 @@ async function loadJob() {
   } finally {
     loading.value = false
   }
+
+  
+  const authStore = useAuthStore()
+
+  async function applyToJob() {
+    if (!authStore.isAuthenticated) {
+      if (confirm("You must be logged in to apply. Go to login page?")) {
+        router.push("/login")
+      }
+      return
+    }
+
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          jobId,
+          userId: authStore.user.id,
+        }),
+      })
+
+      if (!res.ok) throw new Error("Failed to apply to this job")
+      alert("Application sent!")
+    } catch (e) {
+      console.error(e)
+      alert(e.message || "Error while applying.")
+    }
+  }
+
+  
 }
 
 onMounted(loadJob)
