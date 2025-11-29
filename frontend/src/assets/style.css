@@ -1022,7 +1022,8 @@ input[type="file"]:hover {
 
   .btn-edit,
   .btn-refresh,
-  .btn-logout {
+  .btn-logout,
+  .btn-addjob {
     width: 100%;
     justify-content: center;
   }
