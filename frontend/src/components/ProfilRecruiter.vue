@@ -35,9 +35,9 @@
           <button @click="loadProfileData" class="btn-refresh">
             Refresh
           </button>
-          <!--<button @click="handleAddJob" class="btn-addjob">
+          <button @click="handleAddJob" class="btn-refresh">
             Post a job
-          </button>-->
+          </button>
           <button @click="handleLogout" class="btn-logout">
             Logout
           </button>

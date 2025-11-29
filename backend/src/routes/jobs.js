@@ -85,7 +85,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
 // POST /api/jobs  → créer une nouvelle offre
 router.post('/', async (req, res) => {
   try {
@@ -130,7 +129,5 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 })
-
-
 
 module.exports = router;
