@@ -25,5 +25,3 @@ module.exports = pool;
     //console.error('❌ MySQL connection error:', e.message);
   //}
 //})();
-
-

@@ -21,7 +21,7 @@ router.get("/search", async (req, res) => {
     if (contractTypes) {
       const list = contractTypes.split(",");
       sql += ` AND contract_type IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);//
+      params.push(...list);
     }
 
     if (levels) {

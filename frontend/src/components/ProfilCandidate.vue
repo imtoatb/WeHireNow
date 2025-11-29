@@ -27,34 +27,30 @@ onMounted(() => {
   loadProfileData();
 });
 
-// Watch for auth.user changes (when profile gets updated)
+// Watch for auth.user profile changes
 watch(() => auth.user?.profile, (newProfile) => {
   if (newProfile) {
-    profile.value = { ...profile.value, ...newProfile };
+    console.log("🔄 Profile updated in store, refreshing display...");
+    profile.value = { ...newProfile };
   }
 }, { deep: true });
 
 // Function to load profile data
-const loadProfileData = () => {
+const loadProfileData = async () => {
   if (auth.user) {
-    // First try to load from auth store (most recent data)
-    if (auth.user.profile) {
-      profile.value = { ...profile.value, ...auth.user.profile };
+    console.log("📥 Loading profile data...");
+    
+    // First load from database to get fresh data
+    if (auth.loadProfileFromDB) {
+      await auth.loadProfileFromDB();
     }
     
-    // Then try to load from database via API
-    if (auth.loadProfileFromDB && typeof auth.loadProfileFromDB === 'function') {
-      auth.loadProfileFromDB().then(() => {
-        // Update with fresh data from DB
-        if (auth.user?.profile) {
-          profile.value = { ...profile.value, ...auth.user.profile };
-        }
-      });
-    } else if (auth.loadProfile && typeof auth.loadProfile === 'function') {
-      auth.loadProfile();
-      if (auth.user?.profile) {
-        profile.value = { ...profile.value, ...auth.user.profile };
-      }
+    // Then update display with current data
+    if (auth.user?.profile) {
+      profile.value = { ...auth.user.profile };
+      console.log("✅ Profile data loaded:", profile.value);
+    } else {
+      console.log("ℹ️ No profile data found");
     }
   }
 };
@@ -65,7 +61,7 @@ const handleLogout = async () => {
     await auth.logout();
     router.push('/login');
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('❌ Logout error:', error);
   }
 };
 
@@ -123,13 +119,13 @@ const getAccountTypeDisplay = (accountType) => {
         <!-- Action buttons -->
         <div class="profile-actions">
           <button @click="handleEditProfile" class="btn-edit">
-            ✏️ Edit Profile
+            Edit Profile
           </button>
           <button @click="loadProfileData" class="btn-refresh">
-            🔄 Refresh
+            Refresh
           </button>
           <button @click="handleLogout" class="btn-logout">
-            🚪 Logout
+            Logout
           </button>
         </div>
       </div>
@@ -150,7 +146,7 @@ const getAccountTypeDisplay = (accountType) => {
           <div class="contact-grid">
             <div class="contact-item">
               <span class="contact-label">Email:</span>
-              <span class="contact-value">{{ auth.user.email || profile.email }}</span>
+              <span class="contact-value">{{ auth.user.email }}</span>
             </div>
             <div class="contact-item">
               <span class="contact-label">Phone:</span>
