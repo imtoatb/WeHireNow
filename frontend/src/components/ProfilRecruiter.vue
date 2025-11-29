@@ -35,9 +35,9 @@
           <button @click="loadProfileData" class="btn-refresh">
             Refresh
           </button>
-          <button @click="handleAddJob" class="btn-addjob">
+          <!--<button @click="handleAddJob" class="btn-addjob">
             Post a job
-          </button>
+          </button>-->
           <button @click="handleLogout" class="btn-logout">
             Logout
           </button>
@@ -138,6 +138,7 @@ import { onMounted, ref, watch } from "vue";
 const auth = useAuthStore();
 const router = useRouter();
 
+
 // Use reactive profile data
 const profile = ref({
   first_name: "",
@@ -221,4 +222,9 @@ const getInitials = (fullName) => {
     .toUpperCase()
     .slice(0, 2);
 };
+
+const handleAddJob = () => {
+  router.push('/addjob')   // new page to create an offer
+}
+
 </script>
