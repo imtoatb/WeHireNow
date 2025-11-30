@@ -6,7 +6,7 @@
       <RouterLink to="/jobsearch" class="nav-link">JobSearch</RouterLink>
       
       <!-- Links change based on authentication status -->
-      <RouterLink v-if="auth.isAuthenticated" to="profileRoute" class="nav-link">Profile</RouterLink>
+      <RouterLink v-if="auth.isAuthenticated" :to="profileRoute" class="nav-link">Profile</RouterLink>
       <RouterLink v-else to="/login" class="nav-link">Login</RouterLink>
       
       <RouterLink v-if="!auth.isAuthenticated" to="/register" class="nav-link">Register</RouterLink>
