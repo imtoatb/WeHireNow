@@ -23,11 +23,16 @@ const auth = useAuthStore()
 const profileRoute = computed(() => {
   if (!auth.user) return '/login'
 
-  // adapte les valeurs aux valeurs que tu renvoies depuis le backend
-  if (auth.user.account_type === 'recruiter') {
-    return '/profil-r'
+  switch (auth.user.account_type) {
+    case 'recruiter':
+      return '/profil-r'
+    case 'candidate':
+      return '/profil-c'
+    case 'company':
+      // à adapter si tu as une page profil entreprise
+      return '/profil-r'
+    default:
+      return '/profil-c'
   }
-  // par défaut : candidate
-  return '/profil-c'
 })
 </script>
