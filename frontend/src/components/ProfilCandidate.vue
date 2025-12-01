@@ -123,13 +123,13 @@ const getAccountTypeDisplay = (accountType) => {
         <!-- Action buttons -->
         <div class="profile-actions">
           <button @click="handleEditProfile" class="btn-edit">
-            ✏️ Edit Profile
+            Edit Profile
           </button>
           <button @click="loadProfileData" class="btn-refresh">
-            🔄 Refresh
+            Refresh
           </button>
           <button @click="handleLogout" class="btn-logout">
-            🚪 Logout
+            Logout
           </button>
         </div>
       </div>

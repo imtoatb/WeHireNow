@@ -127,9 +127,9 @@
     <section class="results">
       <ul v-if="!loading && jobs.length" class="listJob">
         <li v-for="job in jobs" :key="job.id" class="jobCard">
-          <h3>{{ job.name }}</h3>
-          <p class="company">{{ job.company }}</p>
-          <p class="localisation">{{ job.localisation }}</p>
+          <h3>{{ job.position }}</h3>
+          <p class="company">{{ job.company_name }}</p>
+          <p class="localisation">{{ job.location }}</p>
 
           <p class="meta">
             <span v-if="job.contract_type">{{ job.contract_type }}</span>
@@ -138,14 +138,11 @@
             <span v-if="job.work_mode"> · {{ job.work_mode }}</span>
           </p>
 
-
-          <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn"> View details</RouterLink>
-
-
+          <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn">View details</RouterLink>
         </li>
       </ul>
 
-      <p v-else-if="!loading && !jobs.length">
+      <p v-else-if="!loading && !jobs.length" class="no-jobs">
         No jobs found. Try changing the filters.
       </p>
     </section>
@@ -159,7 +156,7 @@ const jobs = ref([])
 const loading = ref(false)
 const error = ref("")
 
-// Tag options (you can rename / translate as you want)
+// Tag options
 const contractOptions = [
   "CDI",
   "CDD",
@@ -169,21 +166,20 @@ const contractOptions = [
   "Formation",
 ]
 
-const levelOptions = ["Starter", "Junior", "Intermédiaire", "Senior", "Expert"]
+const levelOptions = ["Starter", "Junior", "Intermediate", "Senior", "Expert"]
 
 const timeOptions = ["Part-time", "Full-time"]
 
-const modeOptions = ["Présentiel", "Hybride", "Télétravail", "Nomade"]
+const modeOptions = ["On-site", "Hybrid", "Remote", "Nomadic"]
 
-// Example fields – change to your real ones (IT, HR, etc.)
 const fieldOptions = [
-  "Informatique",
-  "Data / IA",
+  "IT",
+  "Data / AI",
   "Marketing",
   "Finance",
-  "RH",
+  "HR",
   "Design",
-  "Industrie",
+  "Industry",
 ]
 
 // All filters in one object
@@ -224,56 +220,52 @@ async function searchJobs() {
   try {
     loading.value = true
     error.value = ""
+    jobs.value = []
 
     const params = new URLSearchParams()
 
-    if (filters.value.contractTypes.length) {
+    if (filters.value.contractTypes.length)
       params.append("contractTypes", filters.value.contractTypes.join(","))
-    }
-    if (filters.value.levels.length) {
+    if (filters.value.levels.length)
       params.append("levels", filters.value.levels.join(","))
-    }
-    if (filters.value.timeTypes.length) {
+    if (filters.value.timeTypes.length)
       params.append("timeTypes", filters.value.timeTypes.join(","))
-    }
-    if (filters.value.workModes.length) {
+    if (filters.value.workModes.length)
       params.append("workModes", filters.value.workModes.join(","))
-    }
-    if (filters.value.fields.length) {
+    if (filters.value.fields.length)
       params.append("fields", filters.value.fields.join(","))
-    }
-    if (filters.value.area) {
+    if (filters.value.area)
       params.append("area", filters.value.area)
-    }
-    if (filters.value.keywords) {
+    if (filters.value.keywords)
       params.append("keywords", filters.value.keywords)
+
+    console.log("Fetching jobs with params:", params.toString())
+
+    const res = await fetch(
+      `http://localhost:8085/api/jobs/search?${params.toString()}`,
+      { credentials: "include" }
+    )
+
+    // Lire le corps de la réponse **une seule fois**
+    const text = await res.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = text
     }
-
-    // database connection
-    //const res = await fetch(
-      //`http://localhost:8085/api/jobs/search?${params.toString()}`,
-      //{
-        //credentials: "include", 
-      //}
-    //)
-    //end of database connection
-
-    //temporary connection
-    const res = await fetch(`/api/jobs/search?${params.toString()}`, {
-      credentials: "include",
-    })
-
-
-
-    //end of temporary connection
 
     if (!res.ok) {
-      throw new Error("Error while loading jobs")
+      // data peut être un objet JSON ou juste du texte
+      const errorMessage =
+        (data && (data.error || data.message)) || `Error ${res.status}`
+      throw new Error(errorMessage)
     }
 
-    jobs.value = await res.json()
+    console.log("Jobs received:", data)
+    jobs.value = data
   } catch (e) {
-    console.error(e)
+    console.error("Error in searchJobs:", e)
     error.value = e.message || "Failed to load jobs"
   } finally {
     loading.value = false
@@ -322,6 +314,11 @@ onMounted(searchJobs)
   color: #1f1f1f;
   cursor: pointer;
   font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  background: #d8c8c2;
 }
 
 .chip.active {
@@ -338,9 +335,10 @@ onMounted(searchJobs)
 
 .grid-2 input {
   width: 100%;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  font-size: 0.9rem;
 }
 
 .actions {
@@ -356,6 +354,7 @@ onMounted(searchJobs)
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
 .search-btn {
@@ -363,17 +362,42 @@ onMounted(searchJobs)
   color: white;
 }
 
+.search-btn:hover:not(:disabled) {
+  background: #5a3a30;
+}
+
+.search-btn:disabled {
+  background: #a69a95;
+  cursor: not-allowed;
+}
+
 .reset-btn {
   background: #e5e7eb;
+  color: #374151;
+}
+
+.reset-btn:hover {
+  background: #d1d5db;
 }
 
 .error {
   color: #b91c1c;
   margin-top: 8px;
+  padding: 8px;
+  background: #fee2e2;
+  border-radius: 4px;
 }
 
 .loading {
   margin-top: 8px;
+  color: #4b5563;
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-style: italic;
 }
 
 .results {
@@ -397,31 +421,52 @@ onMounted(searchJobs)
   text-align: left;
   border: 1px solid #e5e7eb;
   list-style: none;
+  transition: transform 0.2s ease;
+}
+
+.jobCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.jobCard h3 {
+  margin: 0 0 8px 0;
+  color: #1f1f1f;
+  font-size: 1.1rem;
 }
 
 .company {
   font-weight: 600;
+  color: #EC7357;
+  margin: 0 0 4px 0;
 }
 
 .localisation {
   color: #6b7280;
   font-size: 0.9rem;
+  margin: 0 0 8px 0;
 }
 
 .meta {
   color: #4b5563;
   font-size: 0.8rem;
-  margin: 4px 0 8px;
+  margin: 8px 0;
+  line-height: 1.4;
 }
 
 .detail_btn {
   display: inline-block;
-  margin-top: 10px;
-  padding: 6px 12px;
+  margin-top: 12px;
+  padding: 8px 16px;
   border-radius: 999px;
   background: #754f44;
   color: white;
   text-decoration: none;
   font-size: 0.85rem;
+  transition: background 0.2s ease;
+}
+
+.detail_btn:hover {
+  background: #5a3a30;
 }
 </style>

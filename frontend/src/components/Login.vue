@@ -23,7 +23,6 @@ const email = ref("");
 const password = ref("");
 const auth = useAuthStore();
 const router = useRouter();
-const router = useRouter();
 
 async function handleLogin() {
   await auth.login(email.value, password.value);

@@ -11,6 +11,7 @@ LANCEMENT DU PROJET (À faire dans l'ordre)
 -- Vérifier un profil
 SELECT * FROM candidate_profiles;
 SELECT * FROM users;
+SELECT * FROM jobs;
 
 Doit afficher :
 Routes profile chargées avec succès
@@ -40,6 +41,7 @@ WeHireNow/
 │   ├── src/
 │   │   ├── routes/
 │   │   │   ├── auth.js
+│   │   │   ├── jobs.js
 │   │   │   └── profile.js
 │   │   └── models/
 │   │       └── db.js

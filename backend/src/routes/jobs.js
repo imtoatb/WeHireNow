@@ -2,112 +2,75 @@ const express = require("express");
 const router = express.Router();
 const db = require("../models/db");
 
-// GET /api/jobs/search  → liste filtrée
+// GET /api/jobs/search → filtered list (PostgreSQL version)
 router.get("/search", async (req, res) => {
   try {
-    const {
-      contractTypes,
-      levels,
-      timeTypes,
-      workModes,
-      fields,
-      area,
-      keywords,
-    } = req.query;
+    const { contractTypes, levels, timeTypes, workModes, fields, area, keywords } = req.query;
 
     let sql = "SELECT * FROM jobs WHERE 1=1";
     const params = [];
+    let index = 1;
 
-    if (contractTypes) {
-      const list = contractTypes.split(",");
-      sql += ` AND contract_type IN (${list.map(() => "?").join(",")})`;
+    const addInClause = (field, list) => {
+      const placeholders = list.map(() => `$${index++}`).join(",");
+      sql += ` AND ${field} IN (${placeholders})`;
       params.push(...list);
-    }
+    };
 
-    if (levels) {
-      const list = levels.split(",");
-      sql += ` AND level IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (timeTypes) {
-      const list = timeTypes.split(",");
-      sql += ` AND time_type IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (workModes) {
-      const list = workModes.split(",");
-      sql += ` AND work_mode IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
-
-    if (fields) {
-      const list = fields.split(",");
-      sql += ` AND field IN (${list.map(() => "?").join(",")})`;
-      params.push(...list);
-    }
+    if (contractTypes) addInClause("contract_type", contractTypes.split(","));
+    if (levels) addInClause("level", levels.split(","));
+    if (timeTypes) addInClause("time_type", timeTypes.split(","));
+    if (workModes) addInClause("work_mode", workModes.split(","));
+    if (fields) addInClause("field", fields.split(","));
 
     if (area) {
-      sql += " AND localisation LIKE ?";
+      sql += ` AND localisation ILIKE $${index++}`;
       params.push(`%${area}%`);
     }
 
     if (keywords) {
-      sql += " AND (name LIKE ? OR description LIKE ?)";
+      sql += ` AND (name ILIKE $${index} OR description ILIKE $${index + 1})`;
       params.push(`%${keywords}%`, `%${keywords}%`);
+      index += 2;
     }
 
-    const [rows] = await db.query(sql, params);
-    res.json(rows);
+    const result = await db.query(sql, params);
+    res.json(result.rows);
+
   } catch (err) {
     console.error("Job search error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", details: err.message });
   }
 });
 
-// GET /api/jobs/:id  → un seul job
+// GET /api/jobs/:id → single job (PostgreSQL)
 router.get("/:id", async (req, res) => {
   try {
     const jobId = req.params.id;
-    console.log("➡️  DETAIL HIT /api/jobs/" + jobId);
+    const result = await db.query("SELECT * FROM jobs WHERE id = $1", [jobId]);
 
-    const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [jobId]);
-
-    if (!rows.length) {
+    if (!result.rows.length) {
       return res.status(404).json({ error: "Job not found" });
     }
 
-    res.json(rows[0]);
+    res.json(result.rows[0]);
+
   } catch (err) {
     console.error("Job detail error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", details: err.message });
   }
 });
 
-// POST /api/jobs  → créer une nouvelle offre
-router.post('/', async (req, res) => {
+// POST /api/jobs → create job (PostgreSQL)
+router.post("/", async (req, res) => {
   try {
-    const {
-      name,
-      company,
-      localisation,
-      description,
-      contract_type,
-      level,
-      time_type,
-      work_mode,
-      field,
-    } = req.body
+    const { name, company, localisation, description, contract_type, level, time_type, work_mode, field } = req.body;
 
-    if (!name || !company) {
-      return res.status(400).json({ error: 'Name and company are required' })
-    }
-
-    const [result] = await db.query(
+    const result = await db.query(
       `INSERT INTO jobs
        (name, company, localisation, description, contract_type, level, time_type, work_mode, field)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING *`,
       [
         name,
         company,
@@ -117,17 +80,16 @@ router.post('/', async (req, res) => {
         level || '',
         time_type || '',
         work_mode || '',
-        field || '',
+        field || ''
       ]
-    )
+    );
 
-    // renvoyer le job créé avec son id
-    const [rows] = await db.query('SELECT * FROM jobs WHERE id = ?', [result.insertId])
-    res.status(201).json(rows[0])
+    res.status(201).json(result.rows[0]);
+
   } catch (err) {
-    console.error('Create job error:', err)
-    res.status(500).json({ error: 'Internal server error' })
+    console.error("Create job error:", err);
+    res.status(500).json({ error: "Internal server error", details: err.message });
   }
-})
+});
 
 module.exports = router;
