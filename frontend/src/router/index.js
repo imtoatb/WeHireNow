@@ -22,7 +22,6 @@ const routes = [
   { path: '/profil-c', component: ProfilCandidat, meta: { requiresAuth: true, role: 'candidate' } },
   { path: "/profil-r", component: ProfilRecruiter, meta: { requiresAuth: true, role: 'recruiter' } },
   { path: '/addjob', name: 'AddJob', component: AddJob }
-
 ]
 
 const router = createRouter({
