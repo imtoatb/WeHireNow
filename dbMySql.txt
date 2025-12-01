@@ -1,0 +1,78 @@
+CREATE DATABASE IF NOT EXISTS wehirenow_db;
+USE wehirenow_db;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  account_type ENUM('candidate','recruiter') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS jobs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    company VARCHAR(255) NOT NULL,
+    localisation VARCHAR(255) NOT NULL,
+    description TEXT,
+    contract_type VARCHAR(50),
+    level VARCHAR(50),
+    time_type VARCHAR(50),
+    work_mode VARCHAR(50),
+    field VARCHAR(100)
+);
+
+
+INSERT INTO jobs
+(name, company, localisation, description, contract_type, level, time_type, work_mode, field)
+VALUES
+-- 1
+("Frontend Developer", "TechNova", "Paris, France",
+ "We are looking for a talented junior frontend developer experienced with Vue.js.",
+ "CDI", "Junior", "Full-time", "Hybride", "Informatique"),
+
+-- 2
+("Data Analyst Intern", "DataSphere", "Lyon, France",
+ "Join our analytics team to work with large datasets, dashboards, and ML insights.",
+ "Internship", "Starter", "Full-time", "Présentiel", "Data / IA"),
+ 
+ 
+-- 3
+("Senior Backend Engineer", "SoftCore", "Remote",
+ "You will architect scalable Node.js services and APIs. Experience with microservices required.",
+ "CDI", "Senior", "Full-time", "Télétravail", "Informatique"),
+
+-- 4
+("Marketing Assistant", "Brandify", "Bordeaux, France",
+ "Support the marketing team with campaigns, social media, and digital ads.",
+ "CDD", "Junior", "Part-time", "Présentiel", "Marketing"),
+
+-- 5
+("Freelance UX Designer", "CreativeCloud", "Remote - EU",
+ "Contract-based design for mobile apps and websites. 3+ years of experience preferred.",
+ "Freelance", "Intermédiaire", "Part-time", "Nomade", "Design"),
+
+-- 6
+("Finance Consultant", "EuroFinance", "Geneva, Switzerland",
+ "Advise clients on financial strategies, audits, and risk analysis.",
+ "CDI", "Expert", "Full-time", "Hybride", "Finance"),
+
+-- 7
+("Human Resources Assistant", "PeopleFirst", "Marseille, France",
+ "Assist HR department with recruitment, onboarding, and employee relations.",
+ "Alternance", "Starter", "Full-time", "Présentiel", "RH"),
+ 
+ -- 8
+("AI Research Engineer", "DeepVision", "Berlin, Germany",
+ "Research and prototype new AI models. Python + TensorFlow required.",
+ "CDI", "Senior", "Full-time", "Télétravail", "Data / IA"),
+
+-- 9
+("Industrial Project Manager", "MetalWorks", "Lille, France",
+ "Manage industrial and factory automation projects end-to-end.",
+ "CDI", "Intermédiaire", "Full-time", "Présentiel", "Industrie"),
+
+-- 10
+("Software Engineering Student", "NextGen Academy", "Remote",
+ "Training program for future full-stack developers. Includes certificate.",
+ "Formation", "Starter", "Full-time", "Télétravail", "Informatique");
