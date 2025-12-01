@@ -35,7 +35,7 @@
           <button @click="loadProfileData" class="btn-refresh">
             Refresh
           </button>
-          <button @click="handleAddJob" class="btn-refresh">
+          <button @click="handleAddJob" class="btn-addjob">
             Post a job
           </button>
           <button @click="handleLogout" class="btn-logout">
@@ -224,7 +224,7 @@ const getInitials = (fullName) => {
 };
 
 const handleAddJob = () => {
-  router.push('/addjob')   // new page to create an offer
+  router.push({name: 'AddJobb'})   // new page to create an offer
 }
 
 </script>
