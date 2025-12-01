@@ -56,12 +56,12 @@ app.use("/api/auth", authRoutes);
 
 // === AJOUTEZ CE CODE POUR L'ENREGISTREMENT ===
 try {
-  console.log('🔄 Enregistrement des routes /api/profile...');
+  console.log('Routes saved /api/profile...');
   const profileRoutes = require("./src/routes/profile");
   app.use("/api/profile", profileRoutes);
-  console.log('✅ Routes /api/profile enregistrées avec succès');
+  console.log('Routes /api/profile saved with success');
 } catch (error) {
-  console.error('❌ ERREUR enregistrement routes profile:', error.message);
+  console.error('Error route profile:', error.message);
 }
 // === FIN DU CODE ===
 

@@ -11,9 +11,9 @@ const pool = new Pool({
 // Test de connexion
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
-    console.error('❌ Erreur connexion PostgreSQL:', err);
+    console.error('Erreur connexion PostgreSQL:', err);
   } else {
-    console.log('✅ Connecté à PostgreSQL, heure du serveur:', res.rows[0].now);
+    console.log('Connecté à PostgreSQL, heure du serveur:', res.rows[0].now);
   }
 });
 

@@ -43,12 +43,12 @@ export const useAuthStore = defineStore('auth', {
     // SAUVEGARDE CORRIGÉE - Appelle l'API
     async setProfile(profile) {
       if (!this.user) {
-        console.error('❌ Aucun utilisateur connecté');
+        console.error('No user connected');
         return;
       }
       
       try {
-        console.log('🔄 Envoi du profil à l API...', profile);
+        console.log('Send the profile to the API...', profile);
         
         // APPEL API CRITIQUE - Sauvegarde dans PostgreSQL
         const response = await api.post('/profile/save', {
@@ -57,19 +57,19 @@ export const useAuthStore = defineStore('auth', {
         });
         
         if (response.data.success) {
-          console.log('✅ Profil sauvegardé dans PostgreSQL');
+          console.log('Profile saved in PostgreSQL');
           this.user.profile = profile;
           localStorage.setItem('user', JSON.stringify(this.user));
         } else {
-          throw new Error(response.data.message || 'Erreur inconnue');
+          throw new Error(response.data.message || 'Unknow error');
         }
         
       } catch (error) {
-        console.error('❌ Erreur sauvegarde profil:', error);
+        console.error('Error save profile:', error);
         // Fallback: sauvegarde locale seulement
         this.user.profile = profile;
         localStorage.setItem('user', JSON.stringify(this.user));
-        alert('Attention: Le profil a été sauvegardé localement mais pas dans la base de données. Erreur: ' + error.message);
+        alert('Careful : profile saved locally but nor in the database. Error : ' + error.message);
       }
     },
 
@@ -94,7 +94,7 @@ async loadProfileFromDB() {
       
       const savedUser = JSON.parse(localStorage.getItem('user'))
       if (savedUser && savedUser.profile && savedUser.email === this.user.email) {
-        console.log('📁 Profil chargé depuis localStorage');
+        console.log('Profile charged from localStorage');
         this.user.profile = savedUser.profile;
       }
     }
