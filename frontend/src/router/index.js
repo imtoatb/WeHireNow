@@ -9,6 +9,7 @@ import FormRecruiter from "../components/FormRecruiter.vue";
 import ProfilCandidat from '../components/ProfilCandidate.vue'
 import ProfilRecruiter from '../components/ProfilRecruiter.vue'
 import AddJob from '../components/AddJob.vue'
+import ShowJob from '../components/ShowJob.vue'
 
 const routes = [
   { path: '/', redirect: '/mainpage' },
@@ -21,7 +22,8 @@ const routes = [
   { path: "/form-recruiter", component: FormRecruiter, meta: { requiresAuth: true } },
   { path: '/profil-c', component: ProfilCandidat, meta: { requiresAuth: true, role: 'candidate' } },
   { path: "/profil-r", component: ProfilRecruiter, meta: { requiresAuth: true, role: 'recruiter' } },
-  { path: '/addjob', name: 'AddJob', component: AddJob }
+  { path: '/addjob', name: 'AddJob', component: AddJob },
+  { path: '/showjob', name: 'ShowJob', component: ShowJob}
 ]
 
 const router = createRouter({

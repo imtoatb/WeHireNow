@@ -38,6 +38,9 @@
           <button @click="handleAddJob" class="btn-addjob">
             Post a job
           </button>
+          <button @click="showJob" class="btn-showJob">
+            Job posted
+          </button>
           <button @click="handleLogout" class="btn-logout">
             Logout
           </button>
@@ -224,8 +227,14 @@ const getInitials = (fullName) => {
 };
 
 const handleAddJob = () => {
-  router.push({ name: 'AddJob' })   // au lieu de '/addjob'
+  router.push({ name: 'AddJob' })  
 }
+
+
+const showJob = () => {
+  router.push({ name: 'ShowJob' })  
+}
+
 
 
 </script>
