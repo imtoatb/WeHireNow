@@ -2,7 +2,22 @@ const express = require("express");
 const router = express.Router();
 const db = require("../models/db");
 
-// GET /api/jobs/search → filtered list (PostgreSQL version)
+// ------------------------------------
+// GET /api/jobs → all jobs
+// ------------------------------------
+router.get("/", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM jobs ORDER BY created_at DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching jobs:", err);
+    res.status(500).json({ error: "Internal server error", details: err.message });
+  }
+});
+
+// ------------------------------------
+// GET /api/jobs/search → filtered jobs
+// ------------------------------------
 router.get("/search", async (req, res) => {
   try {
     const { contractTypes, levels, timeTypes, workModes, fields, area, keywords } = req.query;
@@ -24,26 +39,27 @@ router.get("/search", async (req, res) => {
     if (fields) addInClause("field", fields.split(","));
 
     if (area) {
-      sql += ` AND localisation ILIKE $${index++}`;
+      sql += ` AND location ILIKE $${index++}`;
       params.push(`%${area}%`);
     }
 
     if (keywords) {
-      sql += ` AND (name ILIKE $${index} OR description ILIKE $${index + 1})`;
+      sql += ` AND (position ILIKE $${index} OR description ILIKE $${index + 1})`;
       params.push(`%${keywords}%`, `%${keywords}%`);
       index += 2;
     }
 
     const result = await db.query(sql, params);
     res.json(result.rows);
-
   } catch (err) {
     console.error("Job search error:", err);
     res.status(500).json({ error: "Internal server error", details: err.message });
   }
 });
 
-// GET /api/jobs/:id → single job (PostgreSQL)
+// ------------------------------------
+// GET /api/jobs/:id → single job
+// ------------------------------------
 router.get("/:id", async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -54,38 +70,32 @@ router.get("/:id", async (req, res) => {
     }
 
     res.json(result.rows[0]);
-
   } catch (err) {
     console.error("Job detail error:", err);
     res.status(500).json({ error: "Internal server error", details: err.message });
   }
 });
 
-// POST /api/jobs → create job (PostgreSQL)
+// ------------------------------------
+// POST /api/jobs → create job
+// ------------------------------------
 router.post("/", async (req, res) => {
   try {
-    const { name, company, localisation, description, contract_type, level, time_type, work_mode, field } = req.body;
+    const { position, company_name, location, description, contract_type, level, time_type, work_mode, field, salary_range } = req.body;
+
+    if (!position || !company_name) {
+      return res.status(400).json({ error: "Position and company_name are required" });
+    }
 
     const result = await db.query(
       `INSERT INTO jobs
-       (name, company, localisation, description, contract_type, level, time_type, work_mode, field)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-       RETURNING *`,
-      [
-        name,
-        company,
-        localisation || '',
-        description || '',
-        contract_type || '',
-        level || '',
-        time_type || '',
-        work_mode || '',
-        field || ''
-      ]
+      (position, company_name, location, description, contract_type, level, time_type, work_mode, field, salary_range)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING *`,
+      [position, company_name, location || '', description || '', contract_type || '', level || '', time_type || '', work_mode || '', field || '', salary_range || '']
     );
 
     res.status(201).json(result.rows[0]);
-
   } catch (err) {
     console.error("Create job error:", err);
     res.status(500).json({ error: "Internal server error", details: err.message });

@@ -149,40 +149,24 @@
   </div>
 </template>
 
+<!-- seulement la partie script setup -->
+
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, watch } from "vue"
 
 const jobs = ref([])
 const loading = ref(false)
 const error = ref("")
 
-// Tag options
-const contractOptions = [
-  "CDI",
-  "CDD",
-  "Internship",
-  "Alternance",
-  "Freelance",
-  "Formation",
-]
+const contractOptions = ["CDI","CDD","Internship","Alternance","Freelance","Formation"]
+const levelOptions = ["Starter","Junior","Intermediate","Senior","Expert"]
+const timeOptions = ["Part-time","Full-time"]
+const modeOptions = ["On-site","Hybrid","Remote","Nomadic"]
+const fieldOptions = ["IT","Cybersecurity", "Cloud Computing", "Software Engineering", "Data / AI", "Artificial Intelligence", "Marketing","Finance","HR","Design","Industry", "Designe"]
 
-const levelOptions = ["Starter", "Junior", "Intermediate", "Senior", "Expert"]
 
-const timeOptions = ["Part-time", "Full-time"]
 
-const modeOptions = ["On-site", "Hybrid", "Remote", "Nomadic"]
 
-const fieldOptions = [
-  "IT",
-  "Data / AI",
-  "Marketing",
-  "Finance",
-  "HR",
-  "Design",
-  "Industry",
-]
-
-// All filters in one object
 const filters = ref({
   contractTypes: [],
   levels: [],
@@ -196,11 +180,10 @@ const filters = ref({
 function toggleFilter(key, value) {
   const arr = filters.value[key]
   const index = arr.indexOf(value)
-  if (index === -1) {
-    arr.push(value)
-  } else {
-    arr.splice(index, 1)
-  }
+  if (index === -1) arr.push(value)
+  else arr.splice(index, 1)
+
+  searchJobs() // << lance la recherche dès que l'utilisateur clique sur un tag
 }
 
 function resetFilters() {
@@ -223,42 +206,23 @@ async function searchJobs() {
     jobs.value = []
 
     const params = new URLSearchParams()
-
-    if (filters.value.contractTypes.length)
-      params.append("contractTypes", filters.value.contractTypes.join(","))
-    if (filters.value.levels.length)
-      params.append("levels", filters.value.levels.join(","))
-    if (filters.value.timeTypes.length)
-      params.append("timeTypes", filters.value.timeTypes.join(","))
-    if (filters.value.workModes.length)
-      params.append("workModes", filters.value.workModes.join(","))
-    if (filters.value.fields.length)
-      params.append("fields", filters.value.fields.join(","))
-    if (filters.value.area)
-      params.append("area", filters.value.area)
-    if (filters.value.keywords)
-      params.append("keywords", filters.value.keywords)
+    if (filters.value.contractTypes.length) params.append("contractTypes", filters.value.contractTypes.join(","))
+    if (filters.value.levels.length) params.append("levels", filters.value.levels.join(","))
+    if (filters.value.timeTypes.length) params.append("timeTypes", filters.value.timeTypes.join(","))
+    if (filters.value.workModes.length) params.append("workModes", filters.value.workModes.join(","))
+    if (filters.value.fields.length) params.append("fields", filters.value.fields.join(","))
+    if (filters.value.area) params.append("area", filters.value.area)
+    if (filters.value.keywords) params.append("keywords", filters.value.keywords)
 
     console.log("Fetching jobs with params:", params.toString())
 
-    const res = await fetch(
-      `http://localhost:8085/api/jobs/search?${params.toString()}`,
-      { credentials: "include" }
-    )
-
-    // Lire le corps de la réponse **une seule fois**
+    const res = await fetch(`http://localhost:8085/api/jobs/search?${params.toString()}`)
     const text = await res.text()
     let data
-    try {
-      data = JSON.parse(text)
-    } catch {
-      data = text
-    }
+    try { data = JSON.parse(text) } catch { data = text }
 
     if (!res.ok) {
-      // data peut être un objet JSON ou juste du texte
-      const errorMessage =
-        (data && (data.error || data.message)) || `Error ${res.status}`
+      const errorMessage = (data && (data.error || data.message)) || `Error ${res.status}`
       throw new Error(errorMessage)
     }
 
@@ -272,9 +236,9 @@ async function searchJobs() {
   }
 }
 
-// Load once on page open with default filters
 onMounted(searchJobs)
 </script>
+
 
 <style scoped>
 .jobsearch {

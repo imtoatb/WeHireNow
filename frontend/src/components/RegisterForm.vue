@@ -35,9 +35,6 @@ const registerUser = async () => {
 
       <input v-model="password" type="password" placeholder="Mot de passe" required />
 
-
-      <input v-model="password" type="password" placeholder="Mot de passe" required />
-
       <select v-model="account_type">
         <option value="candidate">Candidat</option>
         <option value="recruiter">Recruteur</option>

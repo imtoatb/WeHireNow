@@ -199,7 +199,7 @@ const handleLogout = async () => {
     await auth.logout();
     router.push('/login');
   } catch (error) {
-    console.error('❌ Logout error:', error);
+    console.error('Logout error:', error);
   }
 };
 

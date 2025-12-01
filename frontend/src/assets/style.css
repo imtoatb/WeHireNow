@@ -20,14 +20,7 @@
 }
 
 body {
-  box-sizing: border-box;
-}
-
-body {
   font-family: 'Poppins', sans-serif;
-  background-color: var(--light-bg);
-  color: var(--dark-text);
-  line-height: 1.6;
   background-color: var(--light-bg);
   color: var(--dark-text);
   line-height: 1.6;
@@ -44,15 +37,12 @@ body {
 .navbar {
   background-color: var(--secondary);
   color: var(--white);
-  background-color: var(--secondary);
-  color: var(--white);
   padding: 1.2rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
   z-index: 100;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
@@ -77,24 +67,17 @@ body {
   background-color: var(--primary);
   color: var(--white);
   transition: all 0.25s ease;
-  background-color: var(--primary);
-  color: var(--white);
-  transition: all 0.25s ease;
 }
 
 .nav-link:hover {
   background-color: var(--light-bg);
   color: var(--secondary);
-  background-color: var(--light-bg);
-  color: var(--secondary);
 }
 
-/* === Hero Section === */
+/* === HERO SECTION === */
 .hero {
   text-align: center;
   padding: 5rem 2rem;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--soft-neutral) 100%);
-  color: var(--dark-text);
   background: linear-gradient(135deg, var(--primary) 0%, var(--soft-neutral) 100%);
   color: var(--dark-text);
   border-bottom-left-radius: 40px;
@@ -105,7 +88,6 @@ body {
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1.2rem;
-  color: var(--secondary);
   color: var(--secondary);
 }
 
@@ -133,245 +115,7 @@ body {
   transform: translateY(-3px);
 }
 
-/* === Forms === */
-.form-container {
-  max-width: 850px;
-  margin: 60px auto;
-  padding: 40px;
-  background: var(--soft-neutral);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.form-container h1,
-.form-container h2 {
-  text-align: center;
-  color: var(--secondary);
-  font-weight: 700;
-  margin-bottom: 30px;
-}
-
-.form-container h1 {
-  font-size: 2rem;
-}
-
-.form-container h2 {
-  font-size: 1.8rem;
-}
-
-/* Login & Register Forms */
-.login,
-.register {
-  max-width: 380px;
-  margin: 80px auto;
-  background: var(--soft-neutral);
-  padding: 2rem;
-  border-radius: 18px;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
-  text-align: center;
-}
-
-.login form,
-.register form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.login input,
-.register input,
-.register select {
-  padding: 0.8rem 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--soft-hover);
-  background: var(--white);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
-.login input:focus,
-.register input:focus,
-.register select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 4px rgba(236, 115, 87, 0.5);
-  outline: none;
-}
-
-.login button,
-.register button {
-  background-color: var(--primary);
-  color: var(--white);
-  padding: 0.9rem;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.login button:hover,
-.register button:hover {
-  background-color: var(--secondary);
-  transform: translateY(-2px);
-}
-
-/* === Form Sections === */
-.form-section {
-  margin-bottom: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.form-section label {
-  font-weight: 600;
-  color: var(--secondary);
-}
-
-.form-section input,
-.form-section textarea {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid var(--soft-hover);
-  background: var(--white);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
-.form-section input:focus,
-.form-section textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 5px rgba(236, 115, 87, 0.4);
-  outline: none;
-}
-
-textarea {
-  resize: vertical;
-  min-height: 90px;
-}
-
-/* === Skills Section === */
-.skill-input {
-  display: flex;
-  gap: 10px;
-}
-
-.skill-input button {
-  padding: 8px 14px;
-  border: none;
-  background: var(--primary);
-  color: var(--white);
-  font-size: 1.2rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.skill-input button:hover {
-  background: var(--secondary);
-}
-
-.skill-list {
-  list-style: none;
-  padding: 0;
-}
-
-.skill-list li {
-  background: var(--white);
-  padding: 10px 15px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  border: 1px solid var(--soft-hover);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.skill-list .remove {
-  cursor: pointer;
-  color: var(--primary);
-  font-weight: bold;
-  transition: color 0.2s ease;
-}
-
-.skill-list .remove:hover {
-  color: var(--secondary);
-}
-
-/* === Experience/Education/Activities === */
-.experience-item,
-.education-item,
-.activity-item {
-  background: var(--white);
-  border: 1px solid var(--soft-hover);
-  padding: 15px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.add-btn,
-.add-btn-section {
-  background: var(--secondary);
-  color: var(--white);
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s ease;
-  width: fit-content;
-}
-
-.add-btn:hover,
-.add-btn-section:hover {
-  background: var(--primary);
-}
-
-.experience-item button,
-.education-item button,
-.activity-item button {
-  background: var(--primary);
-  border: none;
-  color: var(--white);
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  width: fit-content;
-  transition: background 0.2s ease;
-}
-
-.experience-item button:hover,
-.education-item button:hover,
-.activity-item button:hover {
-  background: var(--secondary);
-}
-
-/* === Submit Button === */
-.submit-btn {
-  width: 100%;
-  padding: 15px;
-  margin-top: 20px;
-  background: var(--primary);
-  border: none;
-  color: var(--white);
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.submit-btn:hover {
-  background: var(--secondary);
-  transform: translateY(-2px);
-}
-
-/* === Features Section === */
+/* === FEATURES SECTION === */
 .features {
   display: flex;
   justify-content: center;
@@ -403,7 +147,304 @@ textarea {
   margin-bottom: 0.8rem;
 }
 
-/* === Footer === */
+/* === FORMS === */
+.form-container {
+  max-width: 850px;
+  margin: 60px auto;
+  padding: 40px;
+  background: var(--soft-neutral);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.form-container h1,
+.form-container h2 {
+  text-align: center;
+  color: var(--secondary);
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
+.form-container h1 { font-size: 2rem; }
+.form-container h2 { font-size: 1.8rem; }
+
+.login, .register {
+  max-width: 380px;
+  margin: 80px auto;
+  background: var(--soft-neutral);
+  padding: 2rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.login form, .register form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login input, .register input, .register select {
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--soft-hover);
+  background: var(--white);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.login input:focus,
+.register input:focus,
+.register select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 4px rgba(236, 115, 87, 0.5);
+  outline: none;
+}
+
+.login button, .register button {
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.login button:hover, .register button:hover {
+  background-color: var(--secondary);
+  transform: translateY(-2px);
+}
+
+/* === FORM SECTIONS === */
+.form-section {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-section label {
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.form-section input, .form-section textarea {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--soft-hover);
+  background: var(--white);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-section input:focus, .form-section textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 5px rgba(236,115,87,0.4);
+  outline: none;
+}
+
+textarea { resize: vertical; min-height: 90px; }
+
+/* === PROFILE / RECRUITER & CANDIDATE === */
+.profile-container {
+  padding: 0 20px 30px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.header-profil {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.profile-picture-container {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-picture-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: var(--soft-neutral);
+  color: var(--secondary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.profile-info { flex: 1; }
+.profile-name { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; }
+.profile-title { font-size: 1rem; color: var(--secondary); }
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-edit, .btn-refresh, .btn-logout, .btn-addjob {
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-edit { background-color: var(--primary); color: var(--white); }
+.btn-refresh { background-color: var(--secondary); color: var(--white); }
+.btn-logout { background-color: var(--error); color: var(--white); }
+.btn-addjob { background-color: var(--success); color: var(--white); }
+
+.btn-edit:hover { background-color: var(--secondary); }
+.btn-refresh:hover { background-color: var(--primary); }
+.btn-logout:hover { background-color: var(--warning); }
+.btn-addjob:hover { background-color: var(--primary); }
+
+/* === CARDS & SECTIONS === */
+.card {
+  background-color: var(--white);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contact-grid, .company-grid, .skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.no-data {
+  color: var(--secondary);
+  font-style: italic;
+}
+
+/* === EXPERIENCE / EDUCATION / ACTIVITIES === */
+.experience-item,
+.education-item,
+.activity-item {
+  background: var(--white);
+  border: 1px solid var(--soft-hover);
+  padding: 15px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.add-btn, .add-btn-section {
+  background: var(--secondary);
+  color: var(--white);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  width: fit-content;
+}
+
+.add-btn:hover, .add-btn-section:hover { background: var(--primary); }
+
+.experience-item button,
+.education-item button,
+.activity-item button {
+  background: var(--primary);
+  border: none;
+  color: var(--white);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: fit-content;
+  transition: background 0.2s ease;
+}
+
+.experience-item button:hover,
+.education-item button:hover,
+.activity-item button:hover { background: var(--secondary); }
+
+/* === SKILLS === */
+.skill-input { display: flex; gap: 10px; }
+.skill-input button {
+  padding: 8px 14px;
+  border: none;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.skill-input button:hover { background: var(--secondary); }
+
+.skill-list { list-style: none; padding: 0; }
+.skill-list li {
+  background: var(--white);
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--soft-hover);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.skill-list .remove {
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+.skill-list .remove:hover { color: var(--secondary); }
+
+/* === SUBMIT BUTTON === */
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  margin-top: 20px;
+  background: var(--primary);
+  border: none;
+  color: var(--white);
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: var(--secondary);
+  transform: translateY(-2px);
+}
+
+/* === FOOTER === */
 .footer {
   background-color: var(--secondary);
   color: var(--white);
@@ -415,164 +456,45 @@ textarea {
 
 /* === ANIMATIONS === */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .experience-item,
 .education-item,
 .activity-item,
-.skill-list li {
-  animation: fadeIn 0.3s ease-out;
-}
+.skill-list li { animation: fadeIn 0.3s ease-out; }
 
 /* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    gap: 0.8rem;
-    padding: 1rem;
-  }
-
-  .hero {
-    padding: 3rem 1rem;
-  }
-
-  .hero h1 {
-    font-size: 2.3rem;
-  }
-
-  .features {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .form-container {
-    margin: 30px 20px;
-    padding: 25px;
-  }
-
-  .login,
-  .register {
-    margin: 40px 20px;
-    padding: 2rem;
-  }
-
-  .profile-container {
-    padding: 0 15px 30px;
-  }
-
-  .header-profil {
-    margin: 15px 15px 0 15px;
-    padding: 1.2rem;
-    gap: 1.5rem;
-    flex-direction: column;
-    text-align: center;
-    min-height: auto;
-  }
-
-  .profile-actions {
-    margin-left: 0;
-    margin-top: 1rem;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .profile-name {
-    font-size: 1.6rem;
-  }
-
-  .profile-picture,
-  .profile-picture-placeholder {
-    width: 70px;
-    height: 70px;
-    font-size: 1.5rem;
-  }
-
-  .profile-details {
-    padding: 0 15px;
-    margin-top: 1.5rem;
-  }
-
-  .card {
-    padding: 1.5rem;
-  }
-
-  .skill-input {
-    flex-direction: column;
-  }
-
-  .contact-grid,
-  .company-grid {
-    grid-template-columns: 1fr;
-  }
+  .navbar { flex-direction: column; gap: 0.8rem; padding: 1rem; }
+  .hero { padding: 3rem 1rem; }
+  .hero h1 { font-size: 2.3rem; }
+  .features { flex-direction: column; align-items: center; }
+  .form-container { margin: 30px 20px; padding: 25px; }
+  .login, .register { margin: 40px 20px; padding: 2rem; }
+  .profile-container { padding: 0 15px 30px; }
+  .header-profil { margin: 15px; padding: 1.2rem; gap: 1.5rem; flex-direction: column; text-align: center; }
+  .profile-actions { margin-left: 0; margin-top: 1rem; justify-content: center; width: 100%; }
+  .profile-name { font-size: 1.6rem; }
+  .profile-picture, .profile-picture-placeholder { width: 70px; height: 70px; font-size: 1.5rem; }
+  .profile-details { padding: 0 15px; margin-top: 1.5rem; }
+  .card { padding: 1.5rem; }
+  .skill-input { flex-direction: column; }
+  .contact-grid, .company-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
-  .hero h1 {
-    font-size: 2rem;
-  }
-
-  .feature-card {
-    width: 100%;
-    max-width: 300px;
-  }
-
-  .form-container {
-    margin: 20px 15px;
-    padding: 20px;
-  }
-
-  .form-container h1 {
-    font-size: 1.7rem;
-  }
-
-  .submit-btn {
-    padding: 12px;
-    font-size: 1.1rem;
-  }
-
-  .profile-container {
-    padding: 0 10px 20px;
-  }
-
-  .header-profil {
-    margin: 10px 10px 0 10px;
-    padding: 1rem;
-    gap: 1rem;
-  }
-
-  .profile-name {
-    font-size: 1.4rem;
-  }
-
-  .profile-picture,
-  .profile-picture-placeholder {
-    width: 60px;
-    height: 60px;
-    font-size: 1.3rem;
-  }
-
-  .profile-details {
-    padding: 0 10px;
-  }
-
-  .profile-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .btn-edit,
-  .btn-refresh,
-  .btn-logout,
-  .btn-addjob {
-    width: 100%;
-    justify-content: center;
-  }
+  .hero h1 { font-size: 2rem; }
+  .feature-card { width: 100%; max-width: 300px; }
+  .form-container { margin: 20px 15px; padding: 20px; }
+  .form-container h1 { font-size: 1.7rem; }
+  .submit-btn { padding: 12px; font-size: 1.1rem; }
+  .profile-container { padding: 0 10px 20px; }
+  .header-profil { margin: 10px; padding: 1rem; gap: 1rem; }
+  .profile-name { font-size: 1.4rem; }
+  .profile-picture, .profile-picture-placeholder { width: 60px; height: 60px; font-size: 1.3rem; }
+  .profile-details { padding: 0 10px; }
+  .profile-actions { flex-direction: column; width: 100%; }
+  .btn-edit, .btn-refresh, .btn-logout, .btn-addjob { width: 100%; justify-content: center; }
 }
