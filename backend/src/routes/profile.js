@@ -20,7 +20,7 @@ router.post('/save', async (req, res) => {
       activities 
     } = req.body;
 
-    console.log('📨 API /profile/save appelée pour:', email);
+    console.log('API /profile/save called for:', email);
 
     // Trouver l'user_id à partir de l'email
     const userResult = await pool.query(
@@ -29,12 +29,12 @@ router.post('/save', async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      console.log('❌ Utilisateur non trouvé:', email);
+      console.log('User non found:', email);
       return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
     }
 
     const userId = userResult.rows[0].id;
-    console.log('✅ Utilisateur trouvé, ID:', userId);
+    console.log('User found, ID:', userId);
 
     // Vérifier si le profil existe déjà
     const existingProfile = await pool.query(
@@ -54,7 +54,7 @@ router.post('/save', async (req, res) => {
          JSON.stringify(skills), JSON.stringify(experiences), JSON.stringify(educations), 
          JSON.stringify(activities), userId]
       );
-      console.log('✅ Profil mis à jour pour user_id:', userId);
+      console.log('Profile update for user_id:', userId);
     } else {
       // Créer un nouveau profil
       await pool.query(
@@ -65,13 +65,13 @@ router.post('/save', async (req, res) => {
          JSON.stringify(skills), JSON.stringify(experiences), JSON.stringify(educations), 
          JSON.stringify(activities)]
       );
-      console.log('✅ Nouveau profil créé pour user_id:', userId);
+      console.log('New profile created for id :', userId);
     }
 
     res.json({ success: true, message: 'Profil sauvegardé avec succès' });
     
   } catch (error) {
-    console.error('❌ Erreur API /profile/save:', error);
+    console.error(' API Error/profile/save:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -80,7 +80,7 @@ router.post('/save', async (req, res) => {
 router.get('/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    console.log('📨 API /profile/:email appelée pour:', email);
+    console.log('API /profile/:email call for :', email);
 
     const result = await pool.query(
       `SELECT cp.* 
@@ -91,7 +91,7 @@ router.get('/:email', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      console.log('ℹ️ Aucun profil trouvé pour:', email);
+      console.log('No profile found for:', email);
       return res.json({ success: true, profile: null });
     }
 
@@ -106,10 +106,10 @@ router.get('/:email', async (req, res) => {
       activities: profile.activities || []
     };
 
-    console.log('✅ Profil trouvé pour:', email);
+    console.log('Profile found for : ', email);
     res.json({ success: true, profile: formattedProfile });
   } catch (error) {
-    console.error('❌ Erreur API /profile/:email:', error);
+    console.error('API Error /profile/:email:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

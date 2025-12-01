@@ -10,7 +10,7 @@ const app = createApp(App)
 // Ajout de Pinia (store global)
 app.use(createPinia())
 
-// Ajout du router (navigation entre pages)
+// Ajout du router 
 app.use(router)
 
 // Montage de l'application dans index.html

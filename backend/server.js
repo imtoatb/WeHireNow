@@ -25,6 +25,7 @@ dotenv.config();
 const app = express();
 
 // Middleware CORS
+// Middleware CORS
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true,
@@ -59,16 +60,17 @@ app.use("/api/auth", authRoutes);
 
 // === AJOUTEZ CE CODE POUR L'ENREGISTREMENT ===
 try {
-  console.log('🔄 Enregistrement des routes /api/profile...');
+  console.log('Routes saved /api/profile...');
   const profileRoutes = require("./src/routes/profile");
   app.use("/api/profile", profileRoutes);
-  console.log('✅ Routes /api/profile enregistrées avec succès');
+  console.log('Routes /api/profile saved with success');
 } catch (error) {
-  console.error('❌ ERREUR enregistrement routes profile:', error.message);
+  console.error('Error route profile:', error.message);
 }
 // === FIN DU CODE ===
 
+// Start server
 const PORT = process.env.PORT || 8085;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running on http://localhost:" + PORT);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

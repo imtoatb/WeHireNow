@@ -1,17 +1,25 @@
-// MySQL avec mysql2 en mode Promise
-const mysql = require('mysql2/promise');
-const dotenv = require('dotenv');
-dotenv.config();
+const { Pool } = require('pg');
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT),
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'wehirenow_user',
+  password: process.env.DB_PASSWORD || 'SQLEFREI',
+  database: process.env.DB_NAME || 'wehirenow_db',
+  port: Number(process.env.DB_PORT) || 5432, // MySQL/MariaDB par défaut
   waitForConnections: true,
   connectionLimit: 10,
+  queueLimit: 0,
 });
+
+// Test de connexion
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Erreur connexion PostgreSQL:', err);
+  } else {
+    console.log('Connecté à PostgreSQL, heure du serveur:', res.rows[0].now);
+  }
+});
+
 module.exports = pool;
 
 //
