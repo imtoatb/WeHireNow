@@ -224,7 +224,8 @@ const getInitials = (fullName) => {
 };
 
 const handleAddJob = () => {
-  router.push({name: 'AddJobb'})   // new page to create an offer
+  router.push({ name: 'AddJob' })   // au lieu de '/addjob'
 }
+
 
 </script>
