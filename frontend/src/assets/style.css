@@ -397,7 +397,8 @@ body {
 .btn-edit,
 .btn-refresh,
 .btn-logout,
-.btn-login {
+.btn-login,
+.btn-addjob {
   padding: 0.7rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
@@ -420,13 +421,15 @@ body {
   transform: translateY(-2px);
 }
 
-.btn-refresh {
+.btn-refresh,
+.btn-addjob {
   background: transparent;
   color: var(--white);
   border: 2px solid var(--white);
 }
 
-.btn-refresh:hover {
+.btn-refresh:hover,
+.btn-addjob:hover {
   background: var(--white);
   color: var(--secondary);
   transform: translateY(-2px);
@@ -731,6 +734,13 @@ input[type="file"]:hover {
   padding: 20px;
   border-radius: 15px;
   border-left: 4px solid var(--primary);
+}
+
+/*Add a new job page*/
+.add-job {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 /* Boutons d'ajout */
