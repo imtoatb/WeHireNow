@@ -1,16 +1,36 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
+import { jobApplications } from '../services/api' // NOUVEAU
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
-    user: JSON.parse(localStorage.getItem('user')) || null,
     error: null,
+    applications: [] // NOUVEAU
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user
+    isAuthenticated: (state) => !!state.user,
+    // Nouveau getter pour les statistiques de candidature
+    applicationStats: (state) => {
+      if (!state.applications.length) return null;
+      
+      const stats = {
+        pending: 0,
+        reviewed: 0,
+        accepted: 0,
+        rejected: 0,
+        total: 0
+      };
+      
+      state.applications.forEach(app => {
+        stats[app.status] = (stats[app.status] || 0) + 1;
+        stats.total++;
+      });
+      
+      return stats;
+    }
   },
 
   actions: {
@@ -21,6 +41,11 @@ export const useAuthStore = defineStore('auth', {
         
         // Load profile from PostgreSQL
         await this.loadProfileFromDB()
+        
+        // Load applications if user is candidate
+        if (this.user.account_type === 'candidate') {
+          await this.loadApplications();
+        }
         
         this.error = null
       } catch (err) {
@@ -33,7 +58,6 @@ export const useAuthStore = defineStore('auth', {
       try {
         const res = await api.post('/auth/register', { email, password, account_type })
         this.user = res.data
-        this.user = res.data
         this.error = null
       } catch (err) {
         console.error(err)
@@ -44,6 +68,7 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       await api.post('/auth/logout')
       this.user = null
+      this.applications = [] // NOUVEAU
       localStorage.removeItem('user')
     },
 
@@ -61,7 +86,6 @@ export const useAuthStore = defineStore('auth', {
           totalExperiences: profile.experiences ? profile.experiences.length : 0
         });
 
-        // Create payload without image if too large
         const payload = { ...profile };
         if (payload.profile_picture && payload.profile_picture.length > 300 * 1024) {
           console.warn('Image too large, sending without image');
@@ -77,7 +101,6 @@ export const useAuthStore = defineStore('auth', {
         
         if (response.data.success) {
           console.log('Profile saved in PostgreSQL');
-          // Update local profile with the data that was actually saved
           this.user.profile = { ...this.user.profile, ...payload };
           localStorage.setItem('user', JSON.stringify(this.user));
           return response.data;
@@ -88,7 +111,6 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Error saving profile:', error);
         
-        // Local storage fallback
         this.user.profile = { ...this.user.profile, ...profile };
         localStorage.setItem('user', JSON.stringify(this.user));
         
@@ -116,7 +138,6 @@ export const useAuthStore = defineStore('auth', {
         }
       } catch (error) {
         console.error('Error loading profile from DB:', error);
-        // On error, load from localStorage
         this.loadProfileFromLocalStorage();
       }
     },
@@ -130,6 +151,37 @@ export const useAuthStore = defineStore('auth', {
         this.user.profile = savedUser.profile;
       } else {
         console.log('No profile found in localStorage');
+      }
+    },
+
+    // NOUVEAU: Charger les candidatures
+    async loadApplications() {
+      if (!this.user || this.user.account_type !== 'candidate') return;
+      
+      try {
+        const response = await jobApplications.getApplications();
+        this.applications = response.data;
+        console.log('Applications loaded:', this.applications.length);
+      } catch (error) {
+        console.error('Error loading applications:', error);
+        this.applications = [];
+      }
+    },
+
+    // NOUVEAU: Créer une candidature
+    async createApplication(jobId, coverLetter = null) {
+      if (!this.user || this.user.account_type !== 'candidate') {
+        throw new Error('Only candidates can apply to jobs');
+      }
+      
+      try {
+        const response = await jobApplications.createApplication(jobId, coverLetter);
+        // Recharger les candidatures après création
+        await this.loadApplications();
+        return response.data;
+      } catch (error) {
+        console.error('Error creating application:', error);
+        throw error;
       }
     }
   },

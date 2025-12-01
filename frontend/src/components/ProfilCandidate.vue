@@ -92,6 +92,10 @@ const getAccountTypeDisplay = (accountType) => {
   };
   return types[accountType] || accountType;
 };
+
+const seeJobApplications = () => {
+  router.push('/applications');
+};
 </script>
 
 <template>
@@ -124,6 +128,9 @@ const getAccountTypeDisplay = (accountType) => {
         <div class="profile-actions">
           <button @click="handleEditProfile" class="btn-edit">
             Edit Profile
+          </button>
+          <button @click="seeJobApplications" class="btn-app">
+            Applications
           </button>
           <button @click="loadProfileData" class="btn-refresh">
             Refresh

@@ -100,148 +100,50 @@ async function applyToJob() {
     return
   }
 
+  // Vérifier que l'utilisateur est un candidat
+  if (authStore.user.account_type !== 'candidate') {
+    alert("Only candidates can apply to jobs");
+    return;
+  }
+
   try {
-    const res = await fetch("http://localhost:8085/api/applications", {
+    // Créer la payload
+    const payload = {
+      jobId: jobId
+    };
+    
+    console.log("Sending application for job:", jobId);
+    console.log("User ID from store:", authStore.user?.id);
+    
+    // Utiliser l'API avec les bonnes credentials
+    const response = await fetch("http://localhost:8085/api/applications", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        jobId,
-        userId: authStore.user.id,
-      }),
+      headers: { 
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // IMPORTANT: Inclure les cookies de session
+      body: JSON.stringify(payload),
     })
 
-    if (!res.ok) throw new Error("Failed to apply to this job")
-    alert("Application sent successfully!")
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      console.error("Application error response:", responseData);
+      throw new Error(responseData.error || "Failed to apply to this job");
+    }
+    
+    console.log("Application successful:", responseData);
+    alert("Application sent successfully!");
+    
+    // Optionnel: Rediriger vers la page des applications
+    if (confirm("View your applications?")) {
+      router.push("/applications");
+    }
   } catch (e) {
-    console.error(e)
-    alert(e.message || "Error while applying.")
+    console.error("Apply error:", e);
+    alert(e.message || "Error while applying.");
   }
 }
 
 onMounted(loadJob)
 </script>
-
-<style scoped>
-.job-detail {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.card {
-  background: white;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-}
-
-.back-btn {
-  background: transparent;
-  border: none;
-  color: #754f44;
-  cursor: pointer;
-  font-size: 1rem;
-  margin-bottom: 1rem;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.back-btn:hover {
-  background: #f5f5f5;
-}
-
-.title {
-  margin-bottom: 0;
-  color: #1f1f1f;
-  font-size: 2rem;
-}
-
-.company {
-  color: #EC7357;
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 8px 0;
-}
-
-.location {
-  color: #6b7280;
-  margin-bottom: 20px;
-}
-
-.tags {
-  margin: 20px 0;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  background: #f3f4f6;
-  color: #374151;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.tag.salary {
-  background: #10b981;
-  color: white;
-}
-
-.job-sections {
-  margin: 30px 0;
-}
-
-.section {
-  margin-bottom: 30px;
-}
-
-.section h2 {
-  color: #1f1f1f;
-  border-bottom: 2px solid #EC7357;
-  padding-bottom: 8px;
-  margin-bottom: 16px;
-}
-
-.description, .requirements, .benefits {
-  line-height: 1.6;
-  color: #4b5563;
-  white-space: pre-wrap;
-}
-
-.apply-btn {
-  display: block;
-  width: 100%;
-  padding: 16px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 600;
-  background: #754F44;
-  color: white;
-  transition: background 0.2s ease;
-  margin-top: 30px;
-}
-
-.apply-btn:hover {
-  background: #5a3a30;
-}
-
-.info {
-  text-align: center;
-  padding: 40px;
-  color: #6b7280;
-}
-
-.error {
-  text-align: center;
-  padding: 40px;
-  color: #b91c1c;
-  background: #fee2e2;
-  border-radius: 8px;
-}
-</style>

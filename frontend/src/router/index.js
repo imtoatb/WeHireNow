@@ -6,9 +6,10 @@ import JobSearch from '../components/JobSearch.vue'
 import JobDetail from '../components/JobDetail.vue'
 import FormCandidate from "../components/FormCandidate.vue"
 import FormRecruiter from "../components/FormRecruiter.vue"
-import ProfilCandidat from '../components/ProfilCandidate.vue'
+import ProfilCandidate from '../components/ProfilCandidate.vue'
 import ProfilRecruiter from '../components/ProfilRecruiter.vue'
 import AddJob from '../components/AddJob.vue'
+import JobApplication from '../components/JobApplication.vue'
 
 const routes = [
   { path: '/', redirect: '/mainpage' },
@@ -19,9 +20,10 @@ const routes = [
   { path: '/jobs/:id', name: 'JobDetail', component: JobDetail },
   { path: "/form-candidate", component: FormCandidate, meta: { requiresAuth: true } },
   { path: "/form-recruiter", component: FormRecruiter, meta: { requiresAuth: true } },
-  { path: '/profil-c', component: ProfilCandidat, meta: { requiresAuth: true, role: 'candidate' } },
+  { path: '/profil-c', component: ProfilCandidate, meta: { requiresAuth: true, role: 'candidate' } },
   { path: "/profil-r", component: ProfilRecruiter, meta: { requiresAuth: true, role: 'recruiter' } },
-  { path: '/addjob', name: 'AddJob', component: AddJob }
+  { path: '/addjob', name: 'AddJob', component: AddJob },
+  { path: '/applications', name: 'JobApplication', component: JobApplication, meta: { requiresAuth: true, role: 'candidate' } }
 ]
 
 const router = createRouter({

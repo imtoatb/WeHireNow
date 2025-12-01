@@ -2,6 +2,7 @@ LANCEMENT DU PROJET (À faire dans l'ordre)
 
 1. POSTGRESQL dans psql
 
+
 -- Vérifier que la base existe
 \c wehirenow_db
 
@@ -9,9 +10,9 @@ LANCEMENT DU PROJET (À faire dans l'ordre)
 \dt
 
 -- Vérifier un profil
-SELECT * FROM candidate_profiles;
 SELECT * FROM users;
 SELECT * FROM jobs;
+SELECT * FROM job_applications;
 
 Doit afficher :
 Routes profile chargées avec succès
@@ -20,16 +21,14 @@ Server running on http://localhost:8085
 Connecté à PostgreSQL
 
 2.BACKEND dans le terminal 
-
 # Terminal 1 - Backend
 cd backend
 npm install
-node server.js
+node server.js or npm start
 
 
 
 3. FRONTEND dans le terminal
-
 # Terminal 2 - Frontend  
 cd frontend
 npm install
@@ -42,6 +41,7 @@ WeHireNow/
 │   │   ├── routes/
 │   │   │   ├── auth.js
 │   │   │   ├── jobs.js
+│   │   │   ├── jobApplications.js
 │   │   │   └── profile.js
 │   │   └── models/
 │   │       └── db.js
@@ -51,6 +51,21 @@ WeHireNow/
 └── frontend/
     ├── src/
     │   ├── components/
+    │   │   │   ├── AddJob.vue
+    │   │   │   ├── ChoseAccount.vue
+    │   │   │   ├── CompanyJob.vue
+    │   │   │   ├── FooterBar.vue
+    │   │   │   ├── HeaderBar.vue
+    │   │   │   ├── FormCandidate.vue           #form to create the account and modify it
+    │   │   │   ├── FormRecruiter.vue
+    │   │   │   ├── JobApplication.vue          #Candidate job applications's statistics and state
+    │   │   │   ├── JobDetails.vue              #Job offers used on jobSearch
+    │   │   │   ├── JobSearch.vue               #Research page
+    │   │   │   ├── Login.vue
+    │   │   │   ├── ProfilCandidate.vue
+    │   │   │   ├── ProfilRecruiter.vue
+    │   │   │   ├── RegisterForm.vue            #Redirect to the candidate/recruiter form
+    │   │   │   └── MainPage.vue                #Welcome page
     │   ├── stores/
     │   │   └── auth.js
     │   ├── router/
