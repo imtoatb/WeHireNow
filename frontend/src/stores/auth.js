@@ -1,3 +1,5 @@
+
+
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "../services/api";
@@ -88,27 +90,20 @@ export const useAuthStore = defineStore("auth", {
     //  🔥  CHARGEMENT DU PROFIL
     // ---------------------------------------------
     async loadProfileFromDB() {
-      if (!this.user?.email) return;
+  try {
+    if (!this.user?.email) {
+      console.warn('No user email, skipping profile load')
+      return
+    }
 
-      const isRecruiter = this.user.account_type === "recruiter";
+    const res = await api.get(`/profile/${encodeURIComponent(this.user.email)}`)
+    // le backend renvoie { success, profile }
+    this.user.profile = res.data.profile
+    localStorage.setItem('user', JSON.stringify(this.user))
+  } catch (err) {
+    console.error('Error loading profile:', err)
+  }
+}
 
-      const endpoint = isRecruiter
-        ? `/recruiter-profile/${encodeURIComponent(this.user.email)}`
-        : `/profile/${encodeURIComponent(this.user.email)}`;
-
-      try {
-        const res = await api.get(endpoint);
-
-        if (res.data.success && res.data.profile) {
-          this.user.profile = res.data.profile;
-          localStorage.setItem("user", JSON.stringify(this.user));
-          console.log("✔ Profile loaded from DB");
-        } else {
-          console.log("ℹ No profile in DB");
-        }
-      } catch (err) {
-        console.error("❌ Error loading profile:", err);
-      }
-    },
   },
 });
