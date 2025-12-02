@@ -86,7 +86,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/jobs  → créer une nouvelle offre
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const {
       name,
@@ -128,6 +128,12 @@ router.post('/', async (req, res) => {
     console.error('Create job error:', err)
     res.status(500).json({ error: 'Internal server error' })
   }
+  // récup jobs du recruteur connecté
+const [rows] = await db.query(
+  'SELECT * FROM jobs WHERE user_id = ?',
+  [userId]
+)
+
 })
 
 module.exports = router;
