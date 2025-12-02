@@ -97,17 +97,28 @@ export const useAuthStore = defineStore("auth", {
     async loadProfileFromDB() {
       try {
         if (!this.user?.email) {
-          console.warn('No user email, skipping profile load')
-          return
+          console.warn("No user email, skipping profile load");
+          return;
         }
 
-        const res = await api.get(`/profile/${encodeURIComponent(this.user.email)}`)
-        // backend renvoie { success: true, profile: ... }
-        this.user.profile = res.data.profile
-        localStorage.setItem('user', JSON.stringify(this.user))
+        const isRecruiter = this.user.account_type === "recruiter";
+        const endpoint = isRecruiter
+          ? `/recruiter-profile/${encodeURIComponent(this.user.email)}`
+          : `/profile/${encodeURIComponent(this.user.email)}`;
+
+        console.log("➡️ Loading profile from:", endpoint);
+
+        const res = await api.get(endpoint);
+        this.user.profile = res.data.profile;
+
+        console.log("✅ Profile loaded from DB:", this.user.profile);
+
+        localStorage.setItem("user", JSON.stringify(this.user));
       } catch (err) {
-        console.error('Error loading profile:', err)
-      }}
+        console.error("❌ Error loading profile:", err);
+      }
+    }
+
 
   },
 });
