@@ -54,37 +54,42 @@ export const useAuthStore = defineStore("auth", {
     // ---------------------------------------------
     //  🔥  SAUVEGARDE DU PROFIL (Candidat vs Recruteur)
     // ---------------------------------------------
-    async setProfile(payload) {
-      if (!this.user) throw new Error("No user connected");
+   async setProfile(payload) {
+  if (!this.user) throw new Error("No user connected");
 
-      const isRecruiter = this.user.account_type === "recruiter";
+  const isRecruiter = this.user.account_type === "recruiter";
 
-      const endpoint = isRecruiter
-        ? "/recruiter-profile/save"
-        : "/profile/save";
+  const endpoint = isRecruiter
+    ? "/recruiter-profile/save"
+    : "/profile/save";
 
-      console.log("➡️ Sending profile to:", endpoint);
-      console.log("Payload:", payload);
+  console.log("➡️ Sending profile to:", endpoint);
+  console.log("Payload:", payload);
 
-      try {
-        const res = await api.post(endpoint, {
-          email: this.user.email,
-          ...payload,
-        });
+  try {
+    const res = await api.post(endpoint, {
+      email: this.user.email,
+      ...payload,
+    });
 
-        if (!res.data.success) {
-          throw new Error(res.data.message || "Error saving profile");
-        }
+    if (!res.data.success) {
+      throw new Error(res.data.message || "Error saving profile");
+    }
 
-        // Reload from DB after saving
-        await this.loadProfileFromDB();
+    await this.loadProfileFromDB();
+    return true;
+  } catch (err) {
+    console.error("❌ Error saving profile", err);
 
-        return true;
-      } catch (err) {
-        console.error("❌ Error saving profile", err);
-        throw err;
-      }
-    },
+    if (err.response) {
+      console.error("Status:", err.response.status);
+      console.error("Response data:", err.response.data);
+    }
+
+    throw err;
+  }
+},
+
 
     // ---------------------------------------------
     //  🔥  CHARGEMENT DU PROFIL
