@@ -46,13 +46,19 @@ app.get("/", (req, res) => {
   res.send("Backend is finally working with sessions!");
 });
 
+
 // ==== ROUTES API ====
 app.use("/api/jobs", jobRoutes);
 app.use("/api/auth", authRoutes);
+console.log("ca ca passe ⚠️");
 app.use("/api/recruiter-profile", recruiterProfileRoutes);
+console.log("C EST ICI QUE CA CASSE  ⚠️");
 app.use("/api/profile", profileRoutes);
 console.log("✅ Routes /api/* enregistrées");
-
+console.log("authRoutes typeof:", typeof authRoutes);
+console.log("jobRoutes typeof:", typeof jobRoutes);
+console.log("recruiterProfileRoutes typeof:", typeof recruiterProfileRoutes);
+console.log("profileRoutes typeof:", typeof profileRoutes);
 // ==== 404 LOGGER ====
 app.use((req, res) => {
   console.log("❌ 404 - Route non trouvée :", req.method, req.originalUrl);
