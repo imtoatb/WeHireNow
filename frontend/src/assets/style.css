@@ -398,7 +398,8 @@ body {
 .btn-refresh,
 .btn-logout,
 .btn-login,
-.btn-addjob {
+.btn-addjob,
+.btn-showJob {
   padding: 0.7rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
@@ -422,14 +423,16 @@ body {
 }
 
 .btn-refresh,
-.btn-addjob {
+.btn-addjob,
+.btn-showJob {
   background: transparent;
   color: var(--white);
   border: 2px solid var(--white);
 }
 
 .btn-refresh:hover,
-.btn-addjob:hover {
+.btn-addjob:hover,
+.btn-showJob:hover {
   background: var(--white);
   color: var(--secondary);
   transform: translateY(-2px);
@@ -1033,7 +1036,8 @@ input[type="file"]:hover {
   .btn-edit,
   .btn-refresh,
   .btn-logout,
-  .btn-addjob {
+  .btn-addjob,
+  .btn-showJob {
     width: 100%;
     justify-content: center;
   }
