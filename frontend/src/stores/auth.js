@@ -90,20 +90,19 @@ export const useAuthStore = defineStore("auth", {
     //  🔥  CHARGEMENT DU PROFIL
     // ---------------------------------------------
     async loadProfileFromDB() {
-  try {
-    if (!this.user?.email) {
-      console.warn('No user email, skipping profile load')
-      return
-    }
+      try {
+        if (!this.user?.email) {
+          console.warn('No user email, skipping profile load')
+          return
+        }
 
-    const res = await api.get(`/profile/${encodeURIComponent(this.user.email)}`)
-    // le backend renvoie { success, profile }
-    this.user.profile = res.data.profile
-    localStorage.setItem('user', JSON.stringify(this.user))
-  } catch (err) {
-    console.error('Error loading profile:', err)
-  }
-}
+        const res = await api.get(`/profile/${encodeURIComponent(this.user.email)}`)
+        // backend renvoie { success: true, profile: ... }
+        this.user.profile = res.data.profile
+        localStorage.setItem('user', JSON.stringify(this.user))
+      } catch (err) {
+        console.error('Error loading profile:', err)
+      }}
 
   },
 });

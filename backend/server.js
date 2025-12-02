@@ -72,13 +72,11 @@ try {
 // === FIN DU CODE ===
 
 const PORT = process.env.PORT || 8085;
-
 // Middleware 404 pour voir les routes non trouvées
 app.use((req, res) => {
   console.log('❌ 404 - Route non trouvée :', req.method, req.originalUrl);
   res.status(404).json({ message: 'Route not found' });
 });
-
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on http://localhost:" + PORT);
