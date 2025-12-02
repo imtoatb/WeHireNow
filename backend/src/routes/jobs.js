@@ -88,14 +88,8 @@ router.get("/:id", async (req, res) => {
 // POST /api/jobs  → créer une nouvelle offre
 router.post("/", async (req, res) => {
   try {
-    // 1) Vérifier que l'utilisateur est connecté
-    if (!req.session || !req.session.user) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
-    const userId = req.session.user.id;  // 🔴 IMPORTANT
-
     const {
+      email,            // 🔴 ON LIT L'EMAIL DU RECRUTEUR
       name,
       company,
       localisation,
@@ -107,9 +101,30 @@ router.post("/", async (req, res) => {
       field,
     } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
     if (!name || !company) {
       return res.status(400).json({ error: "Name and company are required" });
     }
+
+    // 1) récupérer user_id depuis la table users (comme pour les profils)
+    const [userRows] = await db.query(
+      "SELECT id, account_type FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (!userRows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userId = userRows[0].id;
+
+    // (optionnel) vérifier que c'est bien un recruteur
+    // if (String(userRows[0].account_type).toLowerCase() !== "recruiter") {
+    //   return res.status(403).json({ error: "Only recruiters can post jobs" });
+    // }
 
     // 2) INSERT avec user_id
     const [result] = await db.query(
@@ -134,6 +149,7 @@ router.post("/", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [
       result.insertId,
     ]);
+
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Create job error:", err);

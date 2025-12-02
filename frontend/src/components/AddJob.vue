@@ -171,6 +171,11 @@
 <script setup>
 import { ref, reactive } from "vue"
 import { useRouter } from "vue-router"
+import { useAuthStore } from "../stores/auth"
+import api from "../services/api"
+
+const auth = useAuthStore()
+
 
 const router = useRouter()
 
@@ -224,7 +229,6 @@ function removeSkill(index) {
 
 // ==== Partie "vrai job" envoyé au backend ====
 const form = ref({
-  email: auth.user.email, 
   name: "",
   company: "",
   localisation: "",
@@ -246,21 +250,18 @@ async function submitJob() {
     error.value = ""
     success.value = false
 
-    const res = await fetch("/api/jobs", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // On envoie uniquement les champs du job vers le backend MySQL
-      body: JSON.stringify(form.value),
-    })
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.error || "Failed to create job")
+    if (!auth.user || !auth.user.email) {
+      throw new Error("You must be logged in as a recruiter to post a job.")
     }
 
+    const payload = {
+      email: auth.user.email,   // 🔴 pour retrouver user_id côté backend
+      ...form.value,            // name, company, etc.
+    }
+
+    const res = await api.post("/jobs", payload)
+
+    console.log("Job created:", res.data)
     success.value = true
 
     setTimeout(() => {
@@ -268,11 +269,12 @@ async function submitJob() {
     }, 800)
   } catch (e) {
     console.error(e)
-    error.value = e.message || "Error while creating job"
+    error.value = e.response?.data?.error || e.message || "Error while creating job"
   } finally {
     loading.value = false
   }
 }
+
 </script>
 
 <style scoped>
