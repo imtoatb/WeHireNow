@@ -1,134 +1,114 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import api from '../services/api'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import api from "../services/api";
 
-export const useAuthStore = defineStore('auth', {
+export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
+    user: JSON.parse(localStorage.getItem("user")) || null,
     error: null,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user
+    isAuthenticated: (state) => !!state.user,
   },
 
   actions: {
     async login(email, password) {
       try {
-        const res = await api.post('/auth/login', { email, password })
-        this.user = res.data
-        
-        // Load profile from PostgreSQL
-        await this.loadProfileFromDB()
-        
-        this.error = null
+        const res = await api.post("/auth/login", { email, password });
+        this.user = res.data;
+
+        // Charger le bon profil selon le type
+        await this.loadProfileFromDB();
+
+        this.error = null;
       } catch (err) {
-        console.error(err)
-        this.error = err.response?.data?.error || 'Login failed'
+        console.error(err);
+        this.error = err.response?.data?.error || "Login failed";
       }
     },
 
     async register(email, password, account_type) {
       try {
-        const res = await api.post('/auth/register', { email, password, account_type })
-        this.user = res.data
-        this.error = null
+        const res = await api.post("/auth/register", {
+          email,
+          password,
+          account_type,
+        });
+        this.user = res.data;
+        this.error = null;
       } catch (err) {
-        console.error(err)
-        this.error = err.response?.data?.error || 'Registration failed'
+        console.error(err);
+        this.error = err.response?.data?.error || "Registration failed";
       }
     },
 
     async logout() {
-      await api.post('/auth/logout')
-      this.user = null
-      localStorage.removeItem('user')
+      await api.post("/auth/logout");
+      this.user = null;
+      localStorage.removeItem("user");
     },
 
-    async setProfile(profile) {
-      if (!this.user) {
-        console.error('No user connected');
-        throw new Error('No user connected');
-      }
-      
+    // ---------------------------------------------
+    //  🔥  SAUVEGARDE DU PROFIL (Candidat vs Recruteur)
+    // ---------------------------------------------
+    async setProfile(payload) {
+      if (!this.user) throw new Error("No user connected");
+
+      const isRecruiter = this.user.account_type === "recruiter";
+
+      const endpoint = isRecruiter
+        ? "/recruiter-profile/save"
+        : "/profile/save";
+
+      console.log("➡️ Sending profile to:", endpoint);
+      console.log("Payload:", payload);
+
       try {
-        console.log('Sending profile to API...', {
-          hasImage: !!profile.profile_picture,
-          imageSize: profile.profile_picture ? profile.profile_picture.length : 0,
-          totalSkills: profile.skills ? profile.skills.length : 0,
-          totalExperiences: profile.experiences ? profile.experiences.length : 0
-        });
-
-        // Create payload without image if too large
-        const payload = { ...profile };
-        if (payload.profile_picture && payload.profile_picture.length > 300 * 1024) {
-          console.warn('Image too large, sending without image');
-          const imageSize = payload.profile_picture.length;
-          delete payload.profile_picture;
-          console.log(`Image removed (${imageSize} bytes)`);
-        }
-
-        const response = await api.post('/profile/save', {
+        const res = await api.post(endpoint, {
           email: this.user.email,
-          ...payload
+          ...payload,
         });
-        
-        if (response.data.success) {
-          console.log('Profile saved in PostgreSQL');
-          // Update local profile with the data that was actually saved
-          this.user.profile = { ...this.user.profile, ...payload };
-          localStorage.setItem('user', JSON.stringify(this.user));
-          return response.data;
-        } else {
-          throw new Error(response.data.message || 'Unknown error');
+
+        if (!res.data.success) {
+          throw new Error(res.data.message || "Error saving profile");
         }
-        
-      } catch (error) {
-        console.error('Error saving profile:', error);
-        
-        // Local storage fallback
-        this.user.profile = { ...this.user.profile, ...profile };
-        localStorage.setItem('user', JSON.stringify(this.user));
-        
-        if (error.response?.status === 413) {
-          throw new Error('Request failed with status code 413 - Data too large. Please reduce image size or content.');
-        } else if (error.response?.data?.message) {
-          throw new Error(error.response.data.message);
-        } else {
-          throw new Error('Network error: ' + error.message);
-        }
+
+        // Reload from DB after saving
+        await this.loadProfileFromDB();
+
+        return true;
+      } catch (err) {
+        console.error("❌ Error saving profile", err);
+        throw err;
       }
     },
 
+    // ---------------------------------------------
+    //  🔥  CHARGEMENT DU PROFIL
+    // ---------------------------------------------
     async loadProfileFromDB() {
-      if (!this.user) return
-      
+      if (!this.user?.email) return;
+
+      const isRecruiter = this.user.account_type === "recruiter";
+
+      const endpoint = isRecruiter
+        ? `/recruiter-profile/${encodeURIComponent(this.user.email)}`
+        : `/profile/${encodeURIComponent(this.user.email)}`;
+
       try {
-        const response = await api.get(`/profile/${this.user.email}`)
-        if (response.data.success && response.data.profile) {
-          this.user.profile = response.data.profile;
-          localStorage.setItem('user', JSON.stringify(this.user));
-          console.log('Profile loaded from database');
+        const res = await api.get(endpoint);
+
+        if (res.data.success && res.data.profile) {
+          this.user.profile = res.data.profile;
+          localStorage.setItem("user", JSON.stringify(this.user));
+          console.log("✔ Profile loaded from DB");
         } else {
-          console.log('No profile found in database');
+          console.log("ℹ No profile in DB");
         }
-      } catch (error) {
-        console.error('Error loading profile from DB:', error);
-        // On error, load from localStorage
-        this.loadProfileFromLocalStorage();
+      } catch (err) {
+        console.error("❌ Error loading profile:", err);
       }
     },
-
-    loadProfileFromLocalStorage() {
-      if (!this.user) return
-      
-      const savedUser = JSON.parse(localStorage.getItem('user'))
-      if (savedUser && savedUser.profile && savedUser.email === this.user.email) {
-        console.log('Profile loaded from localStorage');
-        this.user.profile = savedUser.profile;
-      } else {
-        console.log('No profile found in localStorage');
-      }
-    }
   },
-})
+});
