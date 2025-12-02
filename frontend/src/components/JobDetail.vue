@@ -18,7 +18,7 @@
         <span v-if="job.time_type" class="tag">{{ job.time_type }}</span>
         <span v-if="job.work_mode" class="tag">{{ job.work_mode }}</span>
         <span v-if="job.field" class="tag">{{ job.field }}</span>
-        <span v-if="job.salary_range" class="tag salary">{{ job.salary_range }}</span>
+        <span v-if="job.salary_range" class="tag salary">{{ job.salary_range }}€</span>
       </div>
 
       <div class="job-sections">
@@ -94,7 +94,7 @@ async function loadJob() {
 
 async function applyToJob() {
   if (!authStore.isAuthenticated) {
-    if (confirm("You must be logged in to apply. Go to login page?")) {
+    if (confirm("You must be logged in to apply")) {
       router.push("/login")
     }
     return

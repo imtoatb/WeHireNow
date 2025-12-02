@@ -1,11 +1,14 @@
 <template>
   <div class="jobsearch">
-    <h2>Find your perfect job!</h2>
+    <div class="page-header">
+      <h1>Find Your Perfect Job</h1>
+      <p class="subtitle">Browse through our curated list of opportunities</p>
+    </div>
 
     <section class="filters">
       <!-- CONTRACT TYPE -->
       <div class="filter-group">
-        <h3>Contract</h3>
+        <h3>Contract Type</h3>
         <div class="chip-row">
           <button
             v-for="type in contractOptions"
@@ -18,11 +21,11 @@
             {{ type }}
           </button>
         </div>
-      </div> 
+      </div>
 
       <!-- LEVEL -->
       <div class="filter-group">
-        <h3>Level</h3>
+        <h3>Experience Level</h3>
         <div class="chip-row">
           <button
             v-for="level in levelOptions"
@@ -37,9 +40,9 @@
         </div>
       </div>
 
-      <!-- TIME -->
+      <!-- WORKING TIME -->
       <div class="filter-group">
-        <h3>Working time</h3>
+        <h3>Working Time</h3>
         <div class="chip-row">
           <button
             v-for="time in timeOptions"
@@ -56,7 +59,7 @@
 
       <!-- WORK MODE -->
       <div class="filter-group">
-        <h3>Work mode</h3>
+        <h3>Work Mode</h3>
         <div class="chip-row">
           <button
             v-for="mode in modeOptions"
@@ -91,11 +94,13 @@
       <!-- AREA + KEYWORDS -->
       <div class="filter-group grid-2">
         <div>
-          <h3>Area</h3>
+          <h3>Location</h3>
           <input
             v-model="filters.area"
             type="text"
-            placeholder="Country / region / city…"
+            placeholder="Country, region or city…"
+            @keyup.enter="searchJobs"
+            @input="handleAreaInput"
           />
         </div>
         <div>
@@ -103,7 +108,9 @@
           <input
             v-model="filters.keywords"
             type="text"
-            placeholder="Tech stack, skills, role…"
+            placeholder="Skills, role, technology…"
+            @keyup.enter="searchJobs"
+            @input="handleKeywordsInput"
           />
         </div>
       </div>
@@ -111,61 +118,121 @@
       <!-- ACTIONS -->
       <div class="actions">
         <button class="search-btn" @click="searchJobs" :disabled="loading">
-          {{ loading ? "Searching..." : "Search" }}
+          <span v-if="loading" class="btn-loading"></span>
+          {{ loading ? "Searching..." : "Search Jobs" }}
         </button>
         <button class="reset-btn" type="button" @click="resetFilters">
-          Reset
+          Reset All
         </button>
+        <div class="results-count" v-if="!loading && jobs.length">
+          {{ jobs.length }} job{{ jobs.length !== 1 ? 's' : '' }} found
+        </div>
       </div>
 
       <!-- Error / Loading -->
-      <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="loading" class="loading">Loading job listings…</p>
+      <div v-if="error" class="error">
+        <p>{{ error }}</p>
+        <button @click="searchJobs" class="retry-btn">Try Again</button>
+      </div>
+      <div v-if="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading job listings…</p>
+      </div>
     </section>
 
     <!-- RESULTS -->
-    <section class="results">
-      <ul v-if="!loading && jobs.length" class="listJob">
+    <section class="results" v-if="!loading">
+      <div v-if="jobs.length" class="results-header">
+        <h2>Available Positions</h2>
+        <p class="results-subtitle">Click on any job to view details and apply</p>
+      </div>
+
+      <ul v-if="jobs.length" class="listJob">
         <li v-for="job in jobs" :key="job.id" class="jobCard">
-          <h3>{{ job.position }}</h3>
-          <p class="company">{{ job.company_name }}</p>
-          <p class="localisation">{{ job.location }}</p>
+          <div class="job-card-header">
+            <div class="job-title-section">
+              <h3>{{ job.position }}</h3>
+              <p class="company">{{ job.company_name }}</p>
+            </div>
+            <div class="job-salary" v-if="job.salary_range">
+              {{ job.salary_range }}€
+            </div>
+          </div>
+          
+          <div class="job-card-body">
+            <p class="localisation">
+              {{ job.location }}
+            </p>
 
-          <p class="meta">
-            <span v-if="job.contract_type">{{ job.contract_type }}</span>
-            <span v-if="job.level"> · {{ job.level }}</span>
-            <span v-if="job.time_type"> · {{ job.time_type }}</span>
-            <span v-if="job.work_mode"> · {{ job.work_mode }}</span>
-          </p>
+            <div class="job-tags">
+              <span class="job-tag" v-if="job.contract_type">{{ job.contract_type }}</span>
+              <span class="job-tag" v-if="job.level">{{ job.level }}</span>
+              <span class="job-tag" v-if="job.time_type">{{ job.time_type }}</span>
+              <span class="job-tag" v-if="job.work_mode">{{ job.work_mode }}</span>
+              <span class="job-tag field-tag" v-if="job.field">{{ job.field }}</span>
+            </div>
 
-          <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn">View details</RouterLink>
+            <p class="job-description" v-if="job.description">
+              {{ truncateDescription(job.description) }}
+            </p>
+
+            <div class="job-card-footer">
+              <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn">
+                View Details
+              </RouterLink>
+              <span class="post-date" v-if="job.created_at">
+                Posted {{ formatDate(job.created_at) }}
+              </span>
+            </div>
+          </div>
         </li>
       </ul>
 
-      <p v-else-if="!loading && !jobs.length" class="no-jobs">
-        No jobs found. Try changing the filters.
-      </p>
+      <div v-else-if="!loading && !jobs.length && hasSearched" class="no-results">
+        <div class="no-results-content">
+          <h3>No jobs found</h3>
+          <p>Try adjusting your filters or search terms</p>
+          <button @click="resetFilters" class="reset-all-btn">
+            Reset All Filters
+          </button>
+        </div>
+      </div>
+
+      <div v-else-if="!loading && !jobs.length && !hasSearched" class="welcome-message">
+        <h3>Welcome to Job Search</h3>
+        <p>Select filters above to find your perfect job match</p>
+      </div>
     </section>
   </div>
 </template>
 
-<!-- seulement la partie script setup -->
-
 <script setup>
-import { ref, onMounted, watch } from "vue"
+import { ref, onMounted } from "vue"
+import { useRouter } from "vue-router"
 
+const router = useRouter()
 const jobs = ref([])
 const loading = ref(false)
 const error = ref("")
+const hasSearched = ref(false)
 
-const contractOptions = ["CDI","CDD","Internship","Alternance","Freelance","Formation"]
-const levelOptions = ["Starter","Junior","Intermediate","Senior","Expert"]
-const timeOptions = ["Part-time","Full-time"]
-const modeOptions = ["On-site","Hybrid","Remote","Nomadic"]
-const fieldOptions = ["IT","Cybersecurity", "Cloud Computing", "Software Engineering", "Data / AI", "Artificial Intelligence", "Marketing","Finance","HR","Design","Industry", "Designe"]
-
-
-
+// Options standardisées pour correspondre à PostgreSQL
+const contractOptions = ["Permanent", "Fixed-term", "Internship", "Apprenticeship", "Freelance", "Training"]
+const levelOptions = ["Junior", "Mid-level", "Senior", "Expert"]
+const timeOptions = ["Part-time", "Full-time"]
+const modeOptions = ["On-site", "Hybrid", "Remote"]
+const fieldOptions = [
+  "Software Engineering", 
+  "Cybersecurity", 
+  "Cloud Computing", 
+  "Data / AI", 
+  "Artificial Intelligence", 
+  "Marketing", 
+  "Finance", 
+  "HR", 
+  "Design", 
+  "Industry"
+]
 
 const filters = ref({
   contractTypes: [],
@@ -177,13 +244,30 @@ const filters = ref({
   keywords: "",
 })
 
+// Délai pour éviter trop de requêtes pendant la saisie
+let searchTimeout = null
+
 function toggleFilter(key, value) {
   const arr = filters.value[key]
   const index = arr.indexOf(value)
   if (index === -1) arr.push(value)
   else arr.splice(index, 1)
+  
+  searchJobs()
+}
 
-  searchJobs() // << lance la recherche dès que l'utilisateur clique sur un tag
+function handleAreaInput() {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    searchJobs()
+  }, 500)
+}
+
+function handleKeywordsInput() {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    searchJobs()
+  }, 500)
 }
 
 function resetFilters() {
@@ -203,39 +287,75 @@ async function searchJobs() {
   try {
     loading.value = true
     error.value = ""
-    jobs.value = []
+    hasSearched.value = true
 
     const params = new URLSearchParams()
-    if (filters.value.contractTypes.length) params.append("contractTypes", filters.value.contractTypes.join(","))
-    if (filters.value.levels.length) params.append("levels", filters.value.levels.join(","))
-    if (filters.value.timeTypes.length) params.append("timeTypes", filters.value.timeTypes.join(","))
-    if (filters.value.workModes.length) params.append("workModes", filters.value.workModes.join(","))
-    if (filters.value.fields.length) params.append("fields", filters.value.fields.join(","))
-    if (filters.value.area) params.append("area", filters.value.area)
-    if (filters.value.keywords) params.append("keywords", filters.value.keywords)
+    
+    // Ajouter seulement les filtres non vides
+    if (filters.value.contractTypes.length) {
+      params.append("contractTypes", filters.value.contractTypes.join(","))
+    }
+    if (filters.value.levels.length) {
+      params.append("levels", filters.value.levels.join(","))
+    }
+    if (filters.value.timeTypes.length) {
+      params.append("timeTypes", filters.value.timeTypes.join(","))
+    }
+    if (filters.value.workModes.length) {
+      params.append("workModes", filters.value.workModes.join(","))
+    }
+    if (filters.value.fields.length) {
+      params.append("fields", filters.value.fields.join(","))
+    }
+    if (filters.value.area.trim()) {
+      params.append("area", filters.value.area.trim())
+    }
+    if (filters.value.keywords.trim()) {
+      params.append("keywords", filters.value.keywords.trim())
+    }
 
     console.log("Fetching jobs with params:", params.toString())
 
     const res = await fetch(`http://localhost:8085/api/jobs/search?${params.toString()}`)
-    const text = await res.text()
-    let data
-    try { data = JSON.parse(text) } catch { data = text }
-
+    
     if (!res.ok) {
-      const errorMessage = (data && (data.error || data.message)) || `Error ${res.status}`
-      throw new Error(errorMessage)
+      throw new Error(`Error ${res.status}: Failed to load jobs`)
     }
 
-    console.log("Jobs received:", data)
+    const data = await res.json()
+    console.log("Jobs received:", data.length)
     jobs.value = data
   } catch (e) {
     console.error("Error in searchJobs:", e)
-    error.value = e.message || "Failed to load jobs"
+    error.value = e.message || "Failed to load jobs. Please try again."
+    jobs.value = []
   } finally {
     loading.value = false
   }
 }
 
-onMounted(searchJobs)
-</script>
+function truncateDescription(description, maxLength = 120) {
+  if (!description) return ""
+  if (description.length <= maxLength) return description
+  return description.substring(0, maxLength) + "..."
+}
 
+function formatDate(dateString) {
+  if (!dateString) return ""
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now - date)
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) return "today"
+  if (diffDays === 1) return "yesterday"
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+onMounted(() => {
+  // Charger tous les jobs au démarrage
+  searchJobs()
+})
+</script>
