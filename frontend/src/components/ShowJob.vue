@@ -52,6 +52,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue"
 import { useAuthStore } from "../stores/auth"
+import api from "../services/api"
 
 const auth = useAuthStore()
 
@@ -59,17 +60,16 @@ const jobs = ref([])
 const loading = ref(false)
 const error = ref("")
 
-// nom de l'entreprise du recruteur
-const companyName = computed(() => auth.user?.profile?.company_name || "")
+const isRecruiter = computed(
+  () => auth.user && auth.user.account_type === "recruiter"
+)
 
 async function loadJobs() {
   // sécurité : si pas recruteur → rien
-  if (!auth.user || auth.user.account_type !== "recruiter") return
+  if (!isRecruiter.value) return
 
-  if (!companyName.value) {
-    // profil pas rempli → pas de filtre possible
-    error.value =
-      "No company name found in your profile. Please complete your recruiter profile first."
+  if (!auth.user?.email) {
+    error.value = "No user email found. Please log in again."
     return
   }
 
@@ -77,24 +77,20 @@ async function loadJobs() {
     loading.value = true
     error.value = ""
 
-    // récupère tous les jobs (comme JobSearch, sans filtres)
-    const res = await fetch("/api/jobs/search", {
-      credentials: "include",
+    console.log("➡️ Loading jobs for:", auth.user.email)
+
+    const res = await api.get("/jobs/my", {
+      params: {
+        email: auth.user.email,
+      },
     })
 
-    if (!res.ok) {
-      throw new Error("Failed to load jobs")
-    }
-
-    const allJobs = await res.json()
-
-    // filtre côté frontend par nom d'entreprise
-    jobs.value = allJobs.filter(
-      (job) => job.company && job.company === companyName.value
-    )
+    jobs.value = res.data
+    console.log("✅ Jobs loaded:", jobs.value)
   } catch (e) {
     console.error(e)
-    error.value = e.message || "Error while loading jobs"
+    error.value =
+      e.response?.data?.error || e.message || "Error while loading jobs"
   } finally {
     loading.value = false
   }
@@ -102,68 +98,3 @@ async function loadJobs() {
 
 onMounted(loadJobs)
 </script>
-
-<style scoped>
-.show-jobs {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* tu peux réutiliser les mêmes classes que JobSearch */
-.listJob {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-  display: grid;
-  gap: 1rem;
-}
-
-.jobCard {
-  background: #fff;
-  padding: 1.2rem 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-}
-
-.company {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.localisation {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.meta {
-  font-size: 0.85rem;
-  color: #754f44;
-  margin: 0.25rem 0 0.5rem;
-}
-
-.desc {
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
-}
-
-.detail_btn {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 10px;
-  background: #754f44;
-  color: #fff;
-  font-size: 0.85rem;
-  text-decoration: none;
-}
-
-.info {
-  margin-top: 1rem;
-  color: #444;
-}
-
-.error {
-  margin-top: 1rem;
-  color: #b91c1c;
-}
-</style>
