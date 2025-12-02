@@ -74,9 +74,9 @@ router.get("/:id", async (req, res) => {
 
     const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [jobId]);
 
-    if (!rows.length) {
-      return res.status(404).json({ error: "Job not found" });
-    }
+    //if (!rows.length) {
+      //return res.status(404).json({ error: "Job not found" });
+    //}
 
     res.json(rows[0]);
   } catch (err) {
@@ -101,7 +101,10 @@ router.post("/", async (req, res) => {
       field,
     } = req.body;
 
+    console.log("📥 POST /api/jobs body:", req.body);
+
     if (!email) {
+      console.log("❌ Missing email in body");
       return res.status(400).json({ error: "Email is required" });
     }
 
@@ -115,11 +118,15 @@ router.post("/", async (req, res) => {
       [email]
     );
 
+    console.log("🔎 userRows for email", email, "=>", userRows);
+
     if (!userRows.length) {
+      console.log("❌ User not found for email:", email);
       return res.status(404).json({ error: "User not found" });
     }
 
     const userId = userRows[0].id;
+    console.log("✅ Resolved userId:", userId);
 
     // (optionnel) vérifier que c'est bien un recruteur
     // if (String(userRows[0].account_type).toLowerCase() !== "recruiter") {
@@ -145,10 +152,14 @@ router.post("/", async (req, res) => {
       ]
     );
 
+    console.log("🧾 Job inserted with id:", result.insertId);
+
     // 3) renvoyer le job créé avec son id
     const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [
       result.insertId,
     ]);
+
+    console.log("📤 Returning job:", rows[0]);
 
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -156,6 +167,43 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
+// GET /api/jobs/my  → tous les jobs postés par un utilisateur (via email)
+router.get("/my", async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // retrouver user_id à partir de l'email
+    const [userRows] = await db.query(
+      "SELECT id FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (!userRows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userId = userRows[0].id;
+
+    // récupérer tous les jobs avec ce user_id
+    const [jobs] = await db.query(
+      "SELECT * FROM jobs WHERE user_id = ? ORDER BY id DESC",
+      [userId]
+    );
+
+    res.json(jobs);
+  } catch (err) {
+    console.error("Get my jobs error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 
 module.exports = router;
