@@ -5,7 +5,7 @@ const db = require('../models/db') // ta connexion MySQL (comme dans jobs.js)
 
 // Sauvegarder le profil candidat
 router.post('/save', async (req, res) => {
-  try {
+  try {//
     const {
       email,
       first_name,
