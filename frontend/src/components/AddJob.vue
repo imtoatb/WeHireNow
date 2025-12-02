@@ -224,6 +224,7 @@ function removeSkill(index) {
 
 // ==== Partie "vrai job" envoyé au backend ====
 const form = ref({
+  email: auth.user.email, 
   name: "",
   company: "",
   localisation: "",

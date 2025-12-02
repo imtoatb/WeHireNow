@@ -88,6 +88,13 @@ router.get("/:id", async (req, res) => {
 // POST /api/jobs  → créer une nouvelle offre
 router.post("/", async (req, res) => {
   try {
+    // 1) Vérifier que l'utilisateur est connecté
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const userId = req.session.user.id;  // 🔴 IMPORTANT
+
     const {
       name,
       company,
@@ -98,42 +105,41 @@ router.post("/", async (req, res) => {
       time_type,
       work_mode,
       field,
-    } = req.body
+    } = req.body;
 
     if (!name || !company) {
-      return res.status(400).json({ error: 'Name and company are required' })
+      return res.status(400).json({ error: "Name and company are required" });
     }
 
+    // 2) INSERT avec user_id
     const [result] = await db.query(
       `INSERT INTO jobs
-       (name, company, localisation, description, contract_type, level, time_type, work_mode, field)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (user_id, name, company, localisation, description, contract_type, level, time_type, work_mode, field)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        userId,
         name,
         company,
-        localisation || '',
-        description || '',
-        contract_type || '',
-        level || '',
-        time_type || '',
-        work_mode || '',
-        field || '',
+        localisation || "",
+        description || "",
+        contract_type || "",
+        level || "",
+        time_type || "",
+        work_mode || "",
+        field || "",
       ]
-    )
+    );
 
-    // renvoyer le job créé avec son id
-    const [rows] = await db.query('SELECT * FROM jobs WHERE id = ?', [result.insertId])
-    res.status(201).json(rows[0])
+    // 3) renvoyer le job créé avec son id
+    const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [
+      result.insertId,
+    ]);
+    res.status(201).json(rows[0]);
   } catch (err) {
-    console.error('Create job error:', err)
-    res.status(500).json({ error: 'Internal server error' })
+    console.error("Create job error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-  // récup jobs du recruteur connecté
-const [rows] = await db.query(
-  'SELECT * FROM jobs WHERE user_id = ?',
-  [userId]
-)
+});
 
-})
 
 module.exports = router;
