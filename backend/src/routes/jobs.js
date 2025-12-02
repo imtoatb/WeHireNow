@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
 // ------------------------------------
 router.get("/search", async (req, res) => {
   try {
-    const { contractTypes, levels, timeTypes, workModes, fields, area, keywords } = req.query;
+    const { contractTypes, levels, timeTypes, workModes, fields, area, keywords, showExpired } = req.query;
 
     let sql = "SELECT * FROM jobs WHERE 1=1";
     const params = [];
@@ -49,6 +49,11 @@ router.get("/search", async (req, res) => {
       index += 2;
     }
 
+    // Si showExpired n'est pas true, filtrer les jobs de plus de 3 mois
+    if (showExpired !== 'true') {
+      sql += ` AND created_at > CURRENT_TIMESTAMP - INTERVAL '3 months'`;
+    }
+
     sql += " ORDER BY created_at DESC";
 
     const result = await db.query(sql, params);
@@ -58,6 +63,7 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ error: "Internal server error", details: err.message });
   }
 });
+
 
 // ------------------------------------
 // GET /api/jobs/:id → single job

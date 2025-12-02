@@ -122,6 +122,42 @@ const jobQueries = {
     }
   },
 
+  // Récupérer tous les jobs
+  async getAllJobs(showExpired = false) {
+    try {
+      console.log('DB: Getting all jobs, showExpired:', showExpired);
+      
+      let sql = "SELECT * FROM jobs WHERE 1=1";
+      
+      // Si showExpired n'est pas true, filtrer les jobs de plus de 3 mois
+      if (!showExpired) {
+        sql += ` AND created_at > CURRENT_TIMESTAMP - INTERVAL '3 months'`;
+      }
+      
+      sql += " ORDER BY created_at DESC";
+      
+      const result = await pool.query(sql);
+      console.log(`DB: Found ${result.rows.length} jobs`);
+      return result.rows;
+    } catch (error) {
+      console.error('DB Error getting all jobs:', error.message);
+      throw error;
+    }
+  },
+
+  // Récupérer un job par ID
+  async getJobById(jobId) {
+    try {
+      console.log(`DB: Getting job by ID: ${jobId}`);
+      const query = 'SELECT * FROM jobs WHERE id = $1';
+      const result = await pool.query(query, [jobId]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('DB Error getting job by ID:', error.message);
+      throw error;
+    }
+  },
+
   // Rechercher des jobs avec filtres
   async searchJobs(filters) {
     try {
@@ -131,35 +167,19 @@ const jobQueries = {
       const params = [];
       let index = 1;
 
-      if (filters.contractTypes && filters.contractTypes.length > 0) {
-        const placeholders = filters.contractTypes.map(() => `$${index++}`).join(",");
-        sql += ` AND contract_type IN (${placeholders})`;
-        params.push(...filters.contractTypes);
-      }
+      const addInClause = (field, values) => {
+        if (values && values.length > 0) {
+          const placeholders = values.map(() => `$${index++}`).join(",");
+          sql += ` AND ${field} IN (${placeholders})`;
+          params.push(...values);
+        }
+      };
 
-      if (filters.levels && filters.levels.length > 0) {
-        const placeholders = filters.levels.map(() => `$${index++}`).join(",");
-        sql += ` AND level IN (${placeholders})`;
-        params.push(...filters.levels);
-      }
-
-      if (filters.timeTypes && filters.timeTypes.length > 0) {
-        const placeholders = filters.timeTypes.map(() => `$${index++}`).join(",");
-        sql += ` AND time_type IN (${placeholders})`;
-        params.push(...filters.timeTypes);
-      }
-
-      if (filters.workModes && filters.workModes.length > 0) {
-        const placeholders = filters.workModes.map(() => `$${index++}`).join(",");
-        sql += ` AND work_mode IN (${placeholders})`;
-        params.push(...filters.workModes);
-      }
-
-      if (filters.fields && filters.fields.length > 0) {
-        const placeholders = filters.fields.map(() => `$${index++}`).join(",");
-        sql += ` AND field IN (${placeholders})`;
-        params.push(...filters.fields);
-      }
+      addInClause("contract_type", filters.contractTypes);
+      addInClause("level", filters.levels);
+      addInClause("time_type", filters.timeTypes);
+      addInClause("work_mode", filters.workModes);
+      addInClause("field", filters.fields);
 
       if (filters.area) {
         sql += ` AND location ILIKE $${index++}`;
@@ -172,6 +192,11 @@ const jobQueries = {
         index += 2;
       }
 
+      // Si showExpired n'est pas true, filtrer les jobs de plus de 3 mois
+      if (filters.showExpired !== true && filters.showExpired !== 'true') {
+        sql += ` AND created_at > CURRENT_TIMESTAMP - INTERVAL '3 months'`;
+      }
+
       sql += " ORDER BY created_at DESC";
 
       const result = await pool.query(sql, params);
@@ -179,6 +204,83 @@ const jobQueries = {
       return result.rows;
     } catch (error) {
       console.error('DB Error searching jobs:', error.message);
+      throw error;
+    }
+  },
+
+  // Vérifier si un job est expiré (plus de 3 mois)
+  async isJobExpired(jobId) {
+    try {
+      console.log(`DB: Checking if job ${jobId} is expired`);
+      const query = `
+        SELECT 
+          id,
+          created_at,
+          created_at < CURRENT_TIMESTAMP - INTERVAL '3 months' as is_expired
+        FROM jobs 
+        WHERE id = $1
+      `;
+      const result = await pool.query(query, [jobId]);
+      return result.rows[0]?.is_expired || false;
+    } catch (error) {
+      console.error('DB Error checking if job is expired:', error.message);
+      throw error;
+    }
+  },
+
+  // Récupérer les statistiques des jobs
+  async getJobStats() {
+    try {
+      console.log('DB: Getting job statistics');
+      
+      const query = `
+        SELECT 
+          COUNT(*) as total_jobs,
+          COUNT(CASE WHEN created_at > CURRENT_TIMESTAMP - INTERVAL '3 months' THEN 1 END) as active_jobs,
+          COUNT(CASE WHEN created_at <= CURRENT_TIMESTAMP - INTERVAL '3 months' THEN 1 END) as expired_jobs,
+          COUNT(CASE WHEN created_at > CURRENT_TIMESTAMP - INTERVAL '7 days' THEN 1 END) as recent_jobs
+        FROM jobs
+      `;
+      
+      const result = await pool.query(query);
+      return result.rows[0];
+    } catch (error) {
+      console.error('DB Error getting job stats:', error.message);
+      throw error;
+    }
+  },
+
+  // Récupérer les jobs par compagnie
+  async getJobsByCompany(companyName) {
+    try {
+      console.log(`DB: Getting jobs by company: ${companyName}`);
+      const query = `
+        SELECT * FROM jobs 
+        WHERE company_name ILIKE $1 
+        ORDER BY created_at DESC
+      `;
+      const result = await pool.query(query, [`%${companyName}%`]);
+      return result.rows;
+    } catch (error) {
+      console.error('DB Error getting jobs by company:', error.message);
+      throw error;
+    }
+  },
+
+  // Récupérer les jobs récents (7 derniers jours)
+  async getRecentJobs(limit = 10) {
+    try {
+      console.log(`DB: Getting recent jobs, limit: ${limit}`);
+      const query = `
+        SELECT * FROM jobs 
+        WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '7 days'
+        ORDER BY created_at DESC
+        LIMIT $1
+      `;
+      const result = await pool.query(query, [limit]);
+      return result.rows;
+    } catch (error) {
+      console.error('DB Error getting recent jobs:', error.message);
       throw error;
     }
   }
@@ -203,6 +305,12 @@ const jobApplications = {
       const jobCheck = await pool.query('SELECT id FROM jobs WHERE id = $1', [jobId]);
       if (jobCheck.rows.length === 0) {
         throw new Error('Job not found');
+      }
+      
+      // Vérifier si le job est expiré
+      const jobExpiredCheck = await jobQueries.isJobExpired(jobId);
+      if (jobExpiredCheck) {
+        throw new Error('This job posting has expired and is no longer accepting applications');
       }
       
       // Créer la candidature
@@ -241,6 +349,7 @@ const jobApplications = {
           j.description as job_description,
           j.requirements,
           j.benefits,
+          j.created_at as job_created_at,
           ja.application_date,
           ja.updated_at as last_update
         FROM job_applications ja
@@ -276,7 +385,8 @@ const jobApplications = {
           j.salary_range,
           j.description as job_description,
           j.requirements,
-          j.benefits
+          j.benefits,
+          j.created_at as job_created_at
         FROM job_applications ja
         JOIN jobs j ON ja.job_id = j.id
         WHERE ja.id = $1
@@ -289,17 +399,72 @@ const jobApplications = {
     }
   },
 
+  // Récupérer les candidatures pour un job (pour les recruteurs)
+  async getApplicationsForJob(jobId, userId) {
+    try {
+      console.log(`DB: Getting applications for job: ${jobId} by user: ${userId}`);
+      
+      // Vérifier que l'utilisateur est propriétaire du job
+      const jobCheck = await pool.query(
+        'SELECT id, company_name FROM jobs WHERE id = $1',
+        [jobId]
+      );
+      
+      if (jobCheck.rows.length === 0) {
+        throw new Error('Job not found');
+      }
+      
+      const query = `
+        SELECT 
+          ja.*,
+          u.email,
+          u.account_type,
+          cp.first_name,
+          cp.last_name,
+          cp.profile_picture,
+          cp.skills
+        FROM job_applications ja
+        JOIN users u ON ja.user_id = u.id
+        LEFT JOIN candidate_profiles cp ON u.id = cp.user_id
+        WHERE ja.job_id = $1
+        ORDER BY ja.application_date DESC
+      `;
+      
+      const result = await pool.query(query, [jobId]);
+      return result.rows;
+    } catch (error) {
+      console.error('DB Error getting applications for job:', error.message);
+      throw error;
+    }
+  },
+
   // Mettre à jour le statut d'une candidature
-  async updateApplicationStatus(applicationId, status) {
+  async updateApplicationStatus(applicationId, status, userId = null) {
     try {
       console.log(`DB: Updating application ${applicationId} to status: ${status}`);
-      const query = `
+      
+      let query = `
         UPDATE job_applications 
         SET status = $1, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $2 
-        RETURNING *
+        WHERE id = $2
       `;
-      const result = await pool.query(query, [status, applicationId]);
+      
+      const params = [status, applicationId];
+      
+      // Si un userId est fourni, vérifier qu'il est propriétaire de la candidature
+      if (userId) {
+        query += ' AND user_id = $3';
+        params.push(userId);
+      }
+      
+      query += ' RETURNING *';
+      
+      const result = await pool.query(query, params);
+      
+      if (result.rows.length === 0) {
+        throw new Error('Application not found or access denied');
+      }
+      
       return result.rows[0];
     } catch (error) {
       console.error('DB Error updating application:', error.message);
@@ -308,11 +473,27 @@ const jobApplications = {
   },
 
   // Supprimer une candidature
-  async deleteApplication(applicationId) {
+  async deleteApplication(applicationId, userId = null) {
     try {
       console.log(`DB: Deleting application: ${applicationId}`);
-      const query = 'DELETE FROM job_applications WHERE id = $1 RETURNING *';
-      const result = await pool.query(query, [applicationId]);
+      
+      let query = 'DELETE FROM job_applications WHERE id = $1';
+      const params = [applicationId];
+      
+      // Si un userId est fourni, vérifier qu'il est propriétaire de la candidature
+      if (userId) {
+        query += ' AND user_id = $2';
+        params.push(userId);
+      }
+      
+      query += ' RETURNING *';
+      
+      const result = await pool.query(query, params);
+      
+      if (result.rows.length === 0) {
+        throw new Error('Application not found or access denied');
+      }
+      
       return result.rows[0];
     } catch (error) {
       console.error('DB Error deleting application:', error.message);
@@ -354,23 +535,263 @@ const jobApplications = {
       console.error('DB Error getting application stats:', error.message);
       throw error;
     }
+  },
+
+  // Vérifier si un utilisateur a déjà postulé à un job
+  async hasUserApplied(userId, jobId) {
+    try {
+      console.log(`DB: Checking if user ${userId} has applied to job ${jobId}`);
+      const query = `
+        SELECT id FROM job_applications 
+        WHERE user_id = $1 AND job_id = $2
+      `;
+      const result = await pool.query(query, [userId, jobId]);
+      return result.rows.length > 0;
+    } catch (error) {
+      console.error('DB Error checking if user has applied:', error.message);
+      throw error;
+    }
+  }
+};
+
+// Fonctions pour les profiles
+const profileQueries = {
+  // Sauvegarder un profil candidat
+  async saveCandidateProfile(userId, profileData) {
+    try {
+      console.log(`DB: Saving candidate profile for user: ${userId}`);
+      
+      // Vérifier si le profil existe déjà
+      const checkQuery = 'SELECT user_id FROM candidate_profiles WHERE user_id = $1';
+      const checkResult = await pool.query(checkQuery, [userId]);
+      
+      let query;
+      let params;
+      
+      if (checkResult.rows.length > 0) {
+        // Mettre à jour le profil existant
+        query = `
+          UPDATE candidate_profiles SET
+            first_name = $1,
+            last_name = $2,
+            bio = $3,
+            phone = $4,
+            linkedin = $5,
+            github = $6,
+            profile_picture = $7,
+            skills = $8,
+            experiences = $9,
+            educations = $10,
+            activities = $11,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE user_id = $12
+          RETURNING *
+        `;
+        params = [
+          profileData.first_name || '',
+          profileData.last_name || '',
+          profileData.bio || '',
+          profileData.phone || '',
+          profileData.linkedin || '',
+          profileData.github || '',
+          profileData.profile_picture || '',
+          profileData.skills || [],
+          profileData.experiences || [],
+          profileData.educations || [],
+          profileData.activities || [],
+          userId
+        ];
+      } else {
+        // Créer un nouveau profil
+        query = `
+          INSERT INTO candidate_profiles 
+          (user_id, first_name, last_name, bio, phone, linkedin, github, 
+           profile_picture, skills, experiences, educations, activities)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          RETURNING *
+        `;
+        params = [
+          userId,
+          profileData.first_name || '',
+          profileData.last_name || '',
+          profileData.bio || '',
+          profileData.phone || '',
+          profileData.linkedin || '',
+          profileData.github || '',
+          profileData.profile_picture || '',
+          profileData.skills || [],
+          profileData.experiences || [],
+          profileData.educations || [],
+          profileData.activities || []
+        ];
+      }
+      
+      const result = await pool.query(query, params);
+      return result.rows[0];
+    } catch (error) {
+      console.error('DB Error saving candidate profile:', error.message);
+      throw error;
+    }
+  },
+
+  // Récupérer un profil candidat
+  async getCandidateProfile(userId) {
+    try {
+      console.log(`DB: Getting candidate profile for user: ${userId}`);
+      const query = 'SELECT * FROM candidate_profiles WHERE user_id = $1';
+      const result = await pool.query(query, [userId]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('DB Error getting candidate profile:', error.message);
+      throw error;
+    }
+  },
+
+  // Sauvegarder un profil recruteur
+  async saveRecruiterProfile(userId, profileData) {
+    try {
+      console.log(`DB: Saving recruiter profile for user: ${userId}`);
+      
+      // Vérifier si le profil existe déjà
+      const checkQuery = 'SELECT user_id FROM recruiter_profiles WHERE user_id = $1';
+      const checkResult = await pool.query(checkQuery, [userId]);
+      
+      let query;
+      let params;
+      
+      if (checkResult.rows.length > 0) {
+        // Mettre à jour le profil existant
+        query = `
+          UPDATE recruiter_profiles SET
+            first_name = $1,
+            last_name = $2,
+            position = $3,
+            bio = $4,
+            phone = $5,
+            linkedin = $6,
+            work_email = $7,
+            profile_picture = $8,
+            company_name = $9,
+            company_website = $10,
+            industry = $11,
+            company_size = $12,
+            annual_revenue = $13,
+            company_description = $14,
+            company_location = $15,
+            founded_year = $16,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE user_id = $17
+          RETURNING *
+        `;
+        params = [
+          profileData.first_name || '',
+          profileData.last_name || '',
+          profileData.position || '',
+          profileData.bio || '',
+          profileData.phone || '',
+          profileData.linkedin || '',
+          profileData.work_email || '',
+          profileData.profile_picture || '',
+          profileData.company_name || '',
+          profileData.company_website || '',
+          profileData.industry || '',
+          profileData.company_size || '',
+          profileData.annual_revenue || '',
+          profileData.company_description || '',
+          profileData.company_location || '',
+          profileData.founded_year || '',
+          userId
+        ];
+      } else {
+        // Créer un nouveau profil
+        query = `
+          INSERT INTO recruiter_profiles 
+          (user_id, first_name, last_name, position, bio, phone, linkedin, work_email,
+           profile_picture, company_name, company_website, industry, company_size,
+           annual_revenue, company_description, company_location, founded_year)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+          RETURNING *
+        `;
+        params = [
+          userId,
+          profileData.first_name || '',
+          profileData.last_name || '',
+          profileData.position || '',
+          profileData.bio || '',
+          profileData.phone || '',
+          profileData.linkedin || '',
+          profileData.work_email || '',
+          profileData.profile_picture || '',
+          profileData.company_name || '',
+          profileData.company_website || '',
+          profileData.industry || '',
+          profileData.company_size || '',
+          profileData.annual_revenue || '',
+          profileData.company_description || '',
+          profileData.company_location || '',
+          profileData.founded_year || ''
+        ];
+      }
+      
+      const result = await pool.query(query, params);
+      return result.rows[0];
+    } catch (error) {
+      console.error('DB Error saving recruiter profile:', error.message);
+      throw error;
+    }
+  },
+
+  // Récupérer un profil recruteur
+  async getRecruiterProfile(userId) {
+    try {
+      console.log(`DB: Getting recruiter profile for user: ${userId}`);
+      const query = 'SELECT * FROM recruiter_profiles WHERE user_id = $1';
+      const result = await pool.query(query, [userId]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('DB Error getting recruiter profile:', error.message);
+      throw error;
+    }
   }
 };
 
 // Fonction query basique pour compatibilité
 const query = async (text, params) => {
   try {
-    console.log('DB Query:', text.substring(0, 100), '...');
+    console.log('DB Query:', text.substring(0, 100), params ? '...' : '');
+    const start = Date.now();
     const result = await pool.query(text, params);
+    const duration = Date.now() - start;
+    console.log(`DB Query executed in ${duration}ms`);
     return result;
   } catch (error) {
     console.error('DB Query error:', error.message);
+    console.error('Query:', text);
+    console.error('Params:', params);
     throw error;
+  }
+};
+
+// Fonction pour exécuter une transaction
+const transaction = async (callback) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
 };
 
 module.exports = {
   query,
+  transaction,
   ...jobQueries,
-  ...jobApplications
+  ...jobApplications,
+  ...profileQueries
 };

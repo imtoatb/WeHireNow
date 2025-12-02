@@ -124,8 +124,17 @@
         <button class="reset-btn" type="button" @click="resetFilters">
           Reset All
         </button>
+        <div class="filter-toggles">
+          <label class="toggle-label">
+            <input type="checkbox" v-model="showExpired" @change="searchJobs" />
+            <span>Show expired jobs (3+ months)</span>
+          </label>
+        </div>
         <div class="results-count" v-if="!loading && jobs.length">
           {{ jobs.length }} job{{ jobs.length !== 1 ? 's' : '' }} found
+          <span v-if="expiredJobsCount > 0" class="expired-count">
+            ({{ expiredJobsCount }} expired)
+          </span>
         </div>
       </div>
 
@@ -144,18 +153,28 @@
     <section class="results" v-if="!loading">
       <div v-if="jobs.length" class="results-header">
         <h2>Available Positions</h2>
-        <p class="results-subtitle">Click on any job to view details and apply</p>
+        <p class="results-subtitle">Details & apply</p>
       </div>
 
       <ul v-if="jobs.length" class="listJob">
-        <li v-for="job in jobs" :key="job.id" class="jobCard">
+        <li v-for="job in jobs" :key="job.id" class="jobCard" :class="{ 
+            'job-expired': isJobExpired(job.created_at),
+            'job-expiring-soon': isJobExpiringSoon(job.created_at)
+          }"
+        >
           <div class="job-card-header">
             <div class="job-title-section">
               <h3>{{ job.position }}</h3>
               <p class="company">{{ job.company_name }}</p>
             </div>
             <div class="job-salary" v-if="job.salary_range">
-              {{ job.salary_range }}€
+              {{ job.salary_range }}/€
+            </div>
+            <div v-if="isJobExpired(job.created_at)" class="expired-badge">
+              Expired
+            </div>
+            <div v-else-if="isJobExpiringSoon(job.created_at)" class="expiring-soon-badge">
+              Expiring soon
             </div>
           </div>
           
@@ -177,11 +196,16 @@
             </p>
 
             <div class="job-card-footer">
-              <RouterLink :to="{ name: 'JobDetail', params: { id: job.id } }" class="detail_btn">
-                View Details
+              <RouterLink 
+                :to="{ name: 'JobDetail', params: { id: job.id } }" 
+                class="detail_btn"
+                :class="{ 'btn-disabled': isJobExpired(job.created_at) }"
+              >
+                {{ isJobExpired(job.created_at) ? 'View (Expired)' : 'View Details' }}
               </RouterLink>
-              <span class="post-date" v-if="job.created_at">
+              <span class="post-date" :class="{ 'date-expired': isJobExpired(job.created_at) }">
                 Posted {{ formatDate(job.created_at) }}
+                <span v-if="isJobExpired(job.created_at)" class="expired-warning">Expired</span>
               </span>
             </div>
           </div>
@@ -207,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { useRouter } from "vue-router"
 
 const router = useRouter()
@@ -215,6 +239,7 @@ const jobs = ref([])
 const loading = ref(false)
 const error = ref("")
 const hasSearched = ref(false)
+const showExpired = ref(false) // Par défaut, ne pas montrer les jobs expirés
 
 // Options standardisées pour correspondre à PostgreSQL
 const contractOptions = ["Permanent", "Fixed-term", "Internship", "Apprenticeship", "Freelance", "Training"]
@@ -246,6 +271,11 @@ const filters = ref({
 
 // Délai pour éviter trop de requêtes pendant la saisie
 let searchTimeout = null
+
+// Computed pour compter les jobs expirés
+const expiredJobsCount = computed(() => {
+  return jobs.value.filter(job => isJobExpired(job.created_at)).length
+})
 
 function toggleFilter(key, value) {
   const arr = filters.value[key]
@@ -280,6 +310,7 @@ function resetFilters() {
     area: "",
     keywords: "",
   }
+  showExpired.value = false
   searchJobs()
 }
 
@@ -314,6 +345,9 @@ async function searchJobs() {
       params.append("keywords", filters.value.keywords.trim())
     }
 
+    // Ajouter le paramètre pour montrer les jobs expirés
+    params.append("showExpired", showExpired.value)
+
     console.log("Fetching jobs with params:", params.toString())
 
     const res = await fetch(`http://localhost:8085/api/jobs/search?${params.toString()}`)
@@ -334,6 +368,28 @@ async function searchJobs() {
   }
 }
 
+// Vérifier si un job est expiré (plus de 3 mois)
+function isJobExpired(createdAt) {
+  if (!createdAt) return false
+  const jobDate = new Date(createdAt)
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+  return jobDate < threeMonthsAgo
+}
+
+// Vérifier si un job expire bientôt (entre 2.5 et 3 mois)
+function isJobExpiringSoon(createdAt) {
+  if (!createdAt) return false
+  const jobDate = new Date(createdAt)
+  const twoAndHalfMonthsAgo = new Date()
+  twoAndHalfMonthsAgo.setMonth(twoAndHalfMonthsAgo.getMonth() - 2.5)
+  
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+  
+  return jobDate < twoAndHalfMonthsAgo && jobDate >= threeMonthsAgo
+}
+
 function truncateDescription(description, maxLength = 120) {
   if (!description) return ""
   if (description.length <= maxLength) return description
@@ -351,7 +407,8 @@ function formatDate(dateString) {
   if (diffDays === 1) return "yesterday"
   if (diffDays < 7) return `${diffDays} days ago`
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (diffDays < 90) return `${Math.floor(diffDays / 30)} months ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 onMounted(() => {
