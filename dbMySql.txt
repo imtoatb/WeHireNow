@@ -23,6 +23,35 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 
 
+USE wehirenow_db;
+
+CREATE TABLE candidate_profiles (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  bio TEXT,
+  phone VARCHAR(50),
+  linkedin VARCHAR(255),
+  github VARCHAR(255),
+  profile_picture  LONGTEXT,
+
+  skills JSON,
+  experiences JSON,
+  educations JSON,
+  activities JSON,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_candidate_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+wehirenow_db
+
+
 INSERT INTO jobs
 (name, company, localisation, description, contract_type, level, time_type, work_mode, field)
 VALUES
