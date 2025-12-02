@@ -4,6 +4,7 @@ const session = require("express-session");
 const dotenv = require("dotenv");
 const authRoutes = require("./src/routes/auth");
 const jobRoutes = require("./src/routes/jobs");
+const recruiterProfile = require("./src/routes/RecruiterProfile")
 
 
 // === AJOUTEZ CE CODE DE DÉBOGAGE ===
@@ -56,6 +57,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/jobs", jobRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/recruiter-profile", recruiterProfile);
+
 
 // === AJOUTEZ CE CODE POUR L'ENREGISTREMENT ===
 try {
@@ -69,6 +72,14 @@ try {
 // === FIN DU CODE ===
 
 const PORT = process.env.PORT || 8085;
+
+// Middleware 404 pour voir les routes non trouvées
+app.use((req, res) => {
+  console.log('❌ 404 - Route non trouvée :', req.method, req.originalUrl);
+  res.status(404).json({ message: 'Route not found' });
+});
+
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on http://localhost:" + PORT);
 });
