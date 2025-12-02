@@ -78,13 +78,13 @@ router.post('/save', async (req, res) => {
       );
       console.log('✅ recruiter profile updated for user_id', userId);
     } else {
-      // INSERT
+      // INSERT corrigé
       await db.query(
         `INSERT INTO recruiter_profiles
          (user_id, first_name, last_name, position, bio, phone, linkedin, work_email, profile_picture,
           company_name, company_website, industry, company_size, annual_revenue,
           company_description, company_location, founded_year)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           first_name || null,
@@ -114,31 +114,3 @@ router.post('/save', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
-// GET /api/recruiter-profile/:email
-router.get('/:email', async (req, res) => {
-  try {
-    const { email } = req.params;
-    console.log('📨 /api/recruiter-profile/:email for', email);
-
-    const [rows] = await db.query(
-      `SELECT rp.*
-       FROM recruiter_profiles rp
-       JOIN users u ON rp.user_id = u.id
-       WHERE u.email = ?`,
-      [email]
-    );
-
-    if (!rows.length) {
-      console.log('ℹ️ no recruiter profile for', email);
-      return res.json({ success: true, profile: null });
-    }
-
-    res.json({ success: true, profile: rows[0] });
-  } catch (err) {
-    console.error('❌ Error /api/recruiter-profile/:email:', err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-module.exports = router;
