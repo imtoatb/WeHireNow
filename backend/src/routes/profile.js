@@ -1,14 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../models/db'); // connexion MySQL (comme dans jobs.js)
+const express = require('express')
+const router = express.Router()
+const db = require('../models/db') // pool mysql2
 
-// Sauvegarder le profil (candidat OU recruteur)
+// POST /api/profile/save
 router.post('/save', async (req, res) => {
   try {
     const {
       email,
-
-      // Partie candidate / commune
+      // candidat
       first_name,
       last_name,
       bio,
@@ -20,8 +19,7 @@ router.post('/save', async (req, res) => {
       experiences = [],
       educations = [],
       activities = [],
-
-      // Partie recruiter / company
+      // recruteur / company
       position,
       work_email,
       company_name,
@@ -32,98 +30,98 @@ router.post('/save', async (req, res) => {
       company_description,
       company_location,
       founded_year,
-    } = req.body;
+    } = req.body
 
-    console.log('📨 /profile/save pour :', email);
+    console.log('📨 /profile/save pour', email)
 
-    // 1) Récupérer l'user_id
+    // 1) récupérer user_id
     const [userRows] = await db.query(
-      'SELECT id, account_type FROM users WHERE email = ?',
+      'SELECT id FROM users WHERE email = ?',
       [email]
-    );
+    )
 
     if (!userRows.length) {
-      console.log('❌ Utilisateur non trouvé :', email);
-      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+      console.log('❌ Utilisateur non trouvé:', email)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Utilisateur non trouvé' })
     }
 
-    const userId = userRows[0].id;
-    console.log('✅ Utilisateur trouvé, ID =', userId);
+    const userId = userRows[0].id
+    console.log('✅ user_id =', userId)
 
-    // 2) Vérifier si un profil existe déjà
+    // 2) vérifier si profil existe déjà
     const [profileRows] = await db.query(
       'SELECT id FROM candidate_profiles WHERE user_id = ?',
       [userId]
-    );
+    )
 
-    // On convertit les tableaux en JSON
-    const skillsJson       = JSON.stringify(skills || []);
-    const experiencesJson  = JSON.stringify(experiences || []);
-    const educationsJson   = JSON.stringify(educations || []);
-    const activitiesJson   = JSON.stringify(activities || []);
+    const skillsJson = JSON.stringify(skills || [])
+    const expJson = JSON.stringify(experiences || [])
+    const eduJson = JSON.stringify(educations || [])
+    const actJson = JSON.stringify(activities || [])
 
-    if (profileRows.length > 0) {
-      // 3a) UPDATE
+    if (profileRows.length) {
+      // --- UPDATE ---
       await db.query(
         `UPDATE candidate_profiles
          SET first_name = ?, last_name = ?, bio = ?, phone = ?,
              linkedin = ?, github = ?, profile_picture = ?,
              skills = ?, experiences = ?, educations = ?, activities = ?,
              position = ?, work_email = ?, company_name = ?, company_website = ?,
-             industry = ?, company_size = ?, annual_revenue = ?, 
+             industry = ?, company_size = ?, annual_revenue = ?,
              company_description = ?, company_location = ?, founded_year = ?,
              updated_at = CURRENT_TIMESTAMP
          WHERE user_id = ?`,
         [
           first_name, last_name, bio, phone,
           linkedin, github, profile_picture || null,
-          skillsJson, experiencesJson, educationsJson, activitiesJson,
-          position || null, work_email || null, company_name || null, company_website || null,
-          industry || null, company_size || null, annual_revenue || null,
-          company_description || null, company_location || null, founded_year || null,
+          skillsJson, expJson, eduJson, actJson,
+          position, work_email, company_name, company_website,
+          industry, company_size, annual_revenue,
+          company_description, company_location, founded_year || null,
           userId,
         ]
-      );
-
-      console.log('✅ Profil mis à jour pour user_id =', userId);
+      )
+      console.log('✅ Profil mis à jour pour user_id', userId)
     } else {
-      // 3b) INSERT
+      // --- INSERT ---
       await db.query(
         `INSERT INTO candidate_profiles (
-           user_id,
-           first_name, last_name, bio, phone,
-           linkedin, github, profile_picture,
-           skills, experiences, educations, activities,
-           position, work_email, company_name, company_website,
-           industry, company_size, annual_revenue,
-           company_description, company_location, founded_year
-         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            user_id,
+            first_name, last_name, bio, phone,
+            linkedin, github, profile_picture,
+            skills, experiences, educations, activities,
+            position, work_email, company_name, company_website,
+            industry, company_size, annual_revenue,
+            company_description, company_location, founded_year
+         )
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [
           userId,
           first_name, last_name, bio, phone,
           linkedin, github, profile_picture || null,
-          skillsJson, experiencesJson, educationsJson, activitiesJson,
-          position || null, work_email || null, company_name || null, company_website || null,
-          industry || null, company_size || null, annual_revenue || null,
-          company_description || null, company_location || null, founded_year || null,
+          skillsJson, expJson, eduJson, actJson,
+          position, work_email, company_name, company_website,
+          industry, company_size, annual_revenue,
+          company_description, company_location, founded_year || null,
         ]
-      );
-
-      console.log('✅ Nouveau profil créé pour user_id =', userId);
+      )
+      console.log('✅ Nouveau profil créé pour user_id', userId)
     }
 
-    res.json({ success: true, message: 'Profil sauvegardé avec succès' });
+    res.json({ success: true, message: 'Profil sauvegardé avec succès' })
   } catch (error) {
-    console.error('❌ Erreur API /profile/save:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error('❌ Erreur /profile/save:', error)
+    res.status(500).json({ success: false, message: error.message })
   }
-});
+})
 
-// Récupérer le profil (candidat ou recruiter)
+// GET /api/profile/:email
 router.get('/:email', async (req, res) => {
   try {
-    const { email } = req.params;
-    console.log('📨 /profile/:email pour :', email);
+    const { email } = req.params
+    console.log('📨 /profile/:email pour', email)
 
     const [rows] = await db.query(
       `SELECT cp.*
@@ -131,41 +129,30 @@ router.get('/:email', async (req, res) => {
        JOIN users u ON cp.user_id = u.id
        WHERE u.email = ?`,
       [email]
-    );
+    )
 
     if (!rows.length) {
-      console.log('ℹ️ Aucun profil trouvé pour :', email);
-      return res.json({ success: true, profile: null });
+      console.log('ℹ️ Aucun profil pour', email)
+      return res.json({ success: true, profile: null })
     }
 
-    const profile = rows[0];
+    const p = rows[0]
 
-    // Si les colonnes JSON sont renvoyées en string, on parse
-    const safeParse = (value) => {
-      if (!value) return [];
-      if (Array.isArray(value)) return value;
-      try {
-        return JSON.parse(value);
-      } catch {
-        return [];
-      }
-    };
+    const profile = {
+      ...p,
+      skills: p.skills ? JSON.parse(p.skills) : [],
+      experiences: p.experiences ? JSON.parse(p.experiences) : [],
+      educations: p.educations ? JSON.parse(p.educations) : [],
+      activities: p.activities ? JSON.parse(p.activities) : [],
+    }
 
-    const formattedProfile = {
-      ...profile,
-      skills: safeParse(profile.skills),
-      experiences: safeParse(profile.experiences),
-      educations: safeParse(profile.educations),
-      activities: safeParse(profile.activities),
-    };
-
-    console.log('✅ Profil trouvé pour :', email);
-    res.json({ success: true, profile: formattedProfile });
+    console.log('✅ Profil chargé pour', email)
+    res.json({ success: true, profile })
   } catch (error) {
-    console.error('❌ Erreur API /profile/:email:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error('❌ Erreur /profile/:email:', error)
+    res.status(500).json({ success: false, message: error.message })
   }
-});
+})
 
-module.exports = router;
+module.exports = router
 
