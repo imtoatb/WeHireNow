@@ -11,10 +11,12 @@ const jobApplicationsRoutes = require("./src/routes/jobApplications");
 
 const app = express();
 
-// Middleware CORS SIMPLIFIÉ
+// Configuration CORS - le middleware cors gère automatiquement OPTIONS
 app.use(cors({
   origin: "http://localhost:5173",
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: "10mb" }));
@@ -28,20 +30,44 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: false,
-    sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000 // 24 heures
-  }
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000
+  },
+  proxy: true,
+  name: 'wehirenow.sid'
 }));
 
-// Test route
+// Middleware de débogage
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString().split('T')[1].split('.')[0]}] ${req.method} ${req.path}`);
+  console.log('  Session userId:', req.session.userId);
+  next();
+});
+
+// Test routes
 app.get("/", (req, res) => res.send("Backend is working"));
 
-// Routes
+app.get("/api/session-check", (req, res) => {
+  res.json({ 
+    userId: req.session.userId,
+    sessionId: req.sessionID
+  });
+});
+
+app.get("/api/test-cookie", (req, res) => {
+  res.cookie('test_cookie', 'test_value', {
+    httpOnly: false,
+    secure: false,
+    sameSite: 'lax'
+  });
+  res.json({ message: "Cookie set" });
+});
+
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", jobApplicationsRoutes);
 
-// Optional profile routes
 try {
   const profileRoutes = require("./src/routes/profile");
   app.use("/api/profile", profileRoutes);
@@ -50,19 +76,17 @@ try {
   console.error("Profile routes not found:", err.message);
 }
 
-// Gestion des erreurs 404
+// Error handling
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Gestion des erreurs globales
 app.use((err, req, res, next) => {
-  console.error("Global error handler:", err);
-  res.status(500).json({ error: "Internal server error", message: err.message });
+  console.error("Error:", err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
-// Start server
 const PORT = process.env.PORT || 8085;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

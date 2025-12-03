@@ -441,7 +441,7 @@ const jobApplications = {
   // Mettre à jour le statut d'une candidature
   async updateApplicationStatus(applicationId, status, userId = null) {
     try {
-      console.log(`DB: Updating application ${applicationId} to status: ${status}`);
+      console.log(`DB: Updating application ${applicationId} to status: ${status}, userId check: ${userId}`);
       
       let query = `
         UPDATE job_applications 
@@ -462,7 +462,11 @@ const jobApplications = {
       const result = await pool.query(query, params);
       
       if (result.rows.length === 0) {
-        throw new Error('Application not found or access denied');
+        if (userId) {
+          throw new Error('Application not found or access denied');
+        } else {
+          throw new Error('Application not found');
+        }
       }
       
       return result.rows[0];

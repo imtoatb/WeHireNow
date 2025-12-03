@@ -4,6 +4,9 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: 'http://localhost:8085/api',
   withCredentials: true, // pour gérer les cookies de session
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 // Fonctions pour les candidatures
@@ -27,6 +30,9 @@ export const jobApplications = {
   // Mettre à jour une candidature
   updateApplication: (id, status) => 
     api.put(`/applications/${id}`, { status }),
+
+  updateApplicationStatusByRecruiter: (applicationId, status) => 
+  api.put(`/applications/${applicationId}/recruiter`, { status }),
 
   // Supprimer une candidature
   deleteApplication: (id) => 

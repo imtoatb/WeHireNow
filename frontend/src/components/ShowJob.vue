@@ -14,49 +14,69 @@
     <p v-else-if="error" class="error">{{ error }}</p>
 
     <!-- Liste des jobs -->
-    <ul v-else-if="jobs.length" class="listJob">
-      <li
-        v-for="job in jobs"
-        :key="job.id"
-        class="jobCard"
-      >
-        <h3>{{ job.name }}</h3>
-        <p class="company">{{ job.company }}</p>
-        <p class="localisation">{{ job.localisation }}</p>
-
-        <p class="meta">
-          <span v-if="job.contract_type">{{ job.contract_type }}</span>
-          <span v-if="job.level"> · {{ job.level }}</span>
-          <span v-if="job.time_type"> · {{ job.time_type }}</span>
-          <span v-if="job.work_mode"> · {{ job.work_mode }}</span>
-        </p>
-
-        <p class="desc">
-          {{ (job.description || job.desc || "").slice(0, 120) }}…
-        </p>
-
-        <RouterLink
-          :to="{ name: 'JobStats', params: { id: job.id } }"
-          class="detail_btn"
+    <div v-else-if="jobs.length" class="jobs-list">
+      <div class="jobs-grid">
+        <div
+          v-for="job in jobs"
+          :key="job.id"
+          class="job-card"
         >
-          View details
-        </RouterLink>
-      </li>
-    </ul>
+          <div class="job-header">
+            <h3>{{ job.name || job.position }}</h3>
+            <span class="job-id">#{{ job.id }}</span>
+          </div>
+          
+          <p class="company">{{ job.company_name }}</p>
+          <p class="location">{{ job.location }}</p>
+
+          <div class="job-tags">
+            <span v-if="job.contract_type" class="tag">{{ job.contract_type }}</span>
+            <span v-if="job.level" class="tag">{{ job.level }}</span>
+            <span v-if="job.time_type" class="tag">{{ job.time_type }}</span>
+            <span v-if="job.work_mode" class="tag">{{ job.work_mode }}</span>
+            <span v-if="job.field" class="tag">{{ job.field }}</span>
+          </div>
+
+          <p class="description">
+            {{ (job.description || "").slice(0, 150) }}...
+          </p>
+
+          <div class="job-footer">
+            <span class="date">Posted: {{ formatDate(job.created_at) }}</span>
+            
+            <div class="actions">
+              <RouterLink
+                :to="{ name: 'JobStats', params: { id: job.id } }"
+                class="btn-view"
+              >
+                View applications
+              </RouterLink>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Aucun job -->
-    <p v-else class="info">
-      You have not posted any jobs yet.
-    </p>
+    <div v-else class="no-jobs">
+      <p class="info">
+        You have not posted any jobs yet.
+      </p>
+      <RouterLink to="/addjob" class="btn-post">
+        Post your first job
+      </RouterLink>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from "vue"
+import { useRouter } from "vue-router"
 import { useAuthStore } from "../stores/auth"
 import api from "../services/api"
 
 const auth = useAuthStore()
+const router = useRouter()
 
 const jobs = ref([])
 const loading = ref(false)
@@ -66,8 +86,23 @@ const isRecruiter = computed(
   () => auth.user && auth.user.account_type === "recruiter"
 )
 
+// Format date for display
+function formatDate(dateString) {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+function goBack() {
+  router.push("/jobsearch")
+}
+
+// Load jobs
 async function loadJobs() {
-  // sécurité : si pas recruteur → rien
   if (!isRecruiter.value) return
 
   if (!auth.user?.email) {
@@ -79,7 +114,7 @@ async function loadJobs() {
     loading.value = true
     error.value = ""
 
-    console.log("➡️ Loading jobs for:", auth.user.email)
+    console.log("Loading jobs for recruiter:", auth.user.email)
 
     const res = await api.get("/jobs/my", {
       params: {
@@ -87,16 +122,28 @@ async function loadJobs() {
       },
     })
 
-    jobs.value = res.data
-    console.log("✅ Jobs loaded:", jobs.value)
+    jobs.value = res.data || []
+    console.log("Jobs loaded:", jobs.value.length)
   } catch (e) {
-    console.error(e)
-    error.value =
-      e.response?.data?.error || e.message || "Error while loading jobs"
+    console.error("Error loading jobs:", e)
+    error.value = e.response?.data?.error || e.message || "Error while loading jobs"
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadJobs)
+// Watch for auth changes
+import { watch } from "vue"
+watch(() => auth.user, (newUser) => {
+  if (newUser && newUser.account_type === 'recruiter') {
+    loadJobs()
+  }
+})
+
+onMounted(() => {
+  if (isRecruiter.value) {
+    loadJobs()
+  }
+})
 </script>
+

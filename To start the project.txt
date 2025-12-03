@@ -87,6 +87,7 @@ WeHireNow/
     │   │   │   ├── JobApplication.vue          #Candidate job applications's statistics and state
     │   │   │   ├── JobDetail.vue               #Job offers used on jobSearch
     │   │   │   ├── JobSearch.vue               #Research page
+    │   │   │   ├── JobStats.vue
     │   │   │   ├── Login.vue
     │   │   │   ├── ProfilCandidate.vue
     │   │   │   ├── ProfilRecruiter.vue
