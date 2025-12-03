@@ -34,7 +34,7 @@
         </p>
 
         <RouterLink
-          :to="{ name: 'JobDetail', params: { id: job.id } }"
+          :to="{ name: 'JobStats', params: { id: job.id } }"
           class="detail_btn"
         >
           View details
