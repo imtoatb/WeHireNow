@@ -490,7 +490,8 @@ textarea {
 .btn-refresh,
 .btn-logout,
 .btn-addjob,
-.btn-login {
+.btn-login,
+.btn-showJob {
   padding: 0.7rem 1.2rem;
   border-radius: 10px;
   border: none;
@@ -538,12 +539,14 @@ textarea {
   transform: translateY(-2px);
 }
 
-.btn-addjob {
+.btn-addjob,
+.btn-showJob {
   background-color: var(--success);
   color: var(--white);
 }
 
-.btn-addjob:hover {
+.btn-addjob:hover,
+.btn-showJob:hover {
   background-color: #00a842;
   transform: translateY(-2px);
 }
