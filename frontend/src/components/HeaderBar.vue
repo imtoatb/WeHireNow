@@ -1,6 +1,9 @@
 <template>
   <header class="navbar">
-    <div class="logo">WeHireNow</div>
+    <div class="logo">
+      <img src="/src/assets/WHN.png" alt="WeHireNow Logo" class="logo-img" />
+      <span>WeHireNow</span>
+    </div>
     <nav class="nav-buttons">
       <RouterLink to="/mainpage" class="nav-link">Home</RouterLink>
       <RouterLink to="/jobsearch" class="nav-link">JobSearch</RouterLink>
