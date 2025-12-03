@@ -92,6 +92,7 @@ async function loadJob() {
   }
 }
 
+// ✅ LA FONCTION ÉTAIT AU MAUVAIS ENDROIT → JE L’AI SORTIE
 async function applyToJob() {
   if (!authStore.isAuthenticated) {
     if (confirm("You must be logged in to apply")) {
@@ -100,50 +101,41 @@ async function applyToJob() {
     return
   }
 
-  // Vérifier que l'utilisateur est un candidat
   if (authStore.user.account_type !== 'candidate') {
     alert("Only candidates can apply to jobs");
     return;
   }
 
   try {
-    // Créer la payload
-    const payload = {
-      jobId: jobId
-    };
-    
-    console.log("Sending application for job:", jobId);
-    console.log("User ID from store:", authStore.user?.id);
-    
-    // Utiliser l'API avec les bonnes credentials
+    const payload = { jobId: jobId }
+
+    console.log("Sending application:", payload)
+
     const response = await fetch("http://localhost:8085/api/applications", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // IMPORTANT: Inclure les cookies de session
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(payload),
     })
 
-    const responseData = await response.json();
-    
+    const data = await response.json()
+
     if (!response.ok) {
-      console.error("Application error response:", responseData);
-      throw new Error(responseData.error || "Failed to apply to this job");
+      console.error("Application error:", data)
+      throw new Error(data.error || "Failed to apply to this job")
     }
-    
-    console.log("Application successful:", responseData);
-    alert("Application sent successfully!");
-    
-    // Optionnel: Rediriger vers la page des applications
+
+    alert("Application sent successfully!")
+
     if (confirm("View your applications?")) {
-      router.push("/applications");
+      router.push("/applications")
     }
   } catch (e) {
-    console.error("Apply error:", e);
-    alert(e.message || "Error while applying.");
+    console.error("Apply error:", e)
+    alert(e.message || "Error while applying.")
   }
 }
 
 onMounted(loadJob)
 </script>
+

@@ -11,6 +11,7 @@ import ProfilRecruiter from '../components/ProfilRecruiter.vue'
 import AddJob from '../components/AddJob.vue'
 import ShowJob from '../components/ShowJob.vue'
 import JobApplication from '../components/JobApplication.vue'
+import JobStats from "../views/JobStats.vue";
 
 const routes = [
   { path: '/', redirect: '/mainpage' },
@@ -25,7 +26,9 @@ const routes = [
   { path: "/profil-r", component: ProfilRecruiter, meta: { requiresAuth: true, role: 'recruiter' } },
   { path: '/addjob', name: 'AddJob', component: AddJob },
   { path: '/showjob', name: 'ShowJob', component: ShowJob},
-  { path: '/applications', name: 'JobApplication', component: JobApplication, meta: { requiresAuth: true, role: 'candidate' } }
+  { path: '/applications', name: 'JobApplication', component: JobApplication, meta: { requiresAuth: true, role: 'candidate' } },
+  { path: "/job-stats/:id",name: "JobStats",component: JobStats,},
+
 ]
 
 const router = createRouter({
