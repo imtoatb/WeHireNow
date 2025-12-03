@@ -24,7 +24,7 @@ const routes = [
   { path: '/profil-c', component: ProfilCandidate, meta: { requiresAuth: true, role: 'candidate' } },
   { path: "/profil-r", component: ProfilRecruiter, meta: { requiresAuth: true, role: 'recruiter' } },
   { path: '/addjob', name: 'AddJob', component: AddJob },
-  { path: '/showjob', name: 'ShowJob', component: ShowJob}
+  { path: '/showjob', name: 'ShowJob', component: ShowJob},
   { path: '/applications', name: 'JobApplication', component: JobApplication, meta: { requiresAuth: true, role: 'candidate' } }
 ]
 

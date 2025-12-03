@@ -64,8 +64,7 @@ router.get("/search", async (req, res) => {
   }
 });
 
-
-// GET /api/jobs/my  → tous les jobs postés par un utilisateur (via email)
+// GET /api/jobs/my → tous les jobs postés par un utilisateur (via email)
 router.get("/my", async (req, res) => {
   try {
     const { email } = req.query;
@@ -74,31 +73,30 @@ router.get("/my", async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // retrouver user_id à partir de l'email
-    const [userRows] = await db.query(
-      "SELECT id FROM users WHERE email = ?",
+    // retrouver user_id à partir de l'email - FIXED for PostgreSQL
+    const userResult = await db.query(
+      "SELECT id FROM users WHERE email = $1",
       [email]
     );
 
-    if (!userRows.length) {
+    if (!userResult.rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userId = userRows[0].id;
+    const userId = userResult.rows[0].id;
 
-    // récupérer tous les jobs avec ce user_id
-    const [jobs] = await db.query(
-      "SELECT * FROM jobs WHERE user_id = ? ORDER BY id DESC",
+    // récupérer tous les jobs avec ce user_id - FIXED for PostgreSQL
+    const jobsResult = await db.query(
+      "SELECT * FROM jobs WHERE user_id = $1 ORDER BY id DESC",
       [userId]
     );
 
-    res.json(jobs);
+    res.json(jobsResult.rows);
   } catch (err) {
     console.error("Get my jobs error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // ------------------------------------
 // GET /api/jobs/:id → single job
@@ -118,12 +116,11 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error", details: err.message });
   }
 });
-
-// POST /api/jobs  → créer une nouvelle offre
+// POST /api/jobs → créer une nouvelle offre
 router.post("/", async (req, res) => {
   try {
     const {
-      email,            // 🔴 ON LIT L'EMAIL DU RECRUTEUR
+      email,            
       name,
       position, 
       company_name, 
@@ -136,86 +133,109 @@ router.post("/", async (req, res) => {
       field, 
       salary_range,
       requirements,
-      benefits 
-    } = req.body;
-      company,
-      localisation,
-      description,
-      contract_type,
-      level,
-      time_type,
-      work_mode,
-      field,
+      benefits,
+      hiring_roles = [],
+      skills = [],
+      hiring_process = "",
+      company_benefits = [],
+      additional_benefits = ""
     } = req.body;
 
-    console.log("📥 POST /api/jobs body:", req.body);
+    console.log("POST /api/jobs body:", req.body);
 
     if (!email) {
-      console.log("❌ Missing email in body");
+      console.log("Missing email in body");
       return res.status(400).json({ error: "Email is required" });
     }
 
-    if (!name || !company) {
+    if (!name || !company_name) {
       return res.status(400).json({ error: "Name and company are required" });
     }
 
-    // 1) récupérer user_id depuis la table users (comme pour les profils)
-    const [userRows] = await db.query(
-      "SELECT id, account_type FROM users WHERE email = ?",
+    // 1) récupérer user_id depuis la table users
+    const userResult = await db.query(
+      "SELECT id, account_type FROM users WHERE email = $1",
       [email]
     );
 
-    console.log("🔎 userRows for email", email, "=>", userRows);
+    console.log("User rows for email", email, "=>", userResult.rows);
 
-    if (!userRows.length) {
-      console.log("❌ User not found for email:", email);
+    if (!userResult.rows.length) {
+      console.log("User not found for email:", email);
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userId = userRows[0].id;
-    console.log("✅ Resolved userId:", userId);
+    const userId = userResult.rows[0].id;
+    console.log("Resolved userId:", userId);
 
-    // (optionnel) vérifier que c'est bien un recruteur
-    // if (String(userRows[0].account_type).toLowerCase() !== "recruiter") {
-    //   return res.status(403).json({ error: "Only recruiters can post jobs" });
-    // }
+    // Vérifier que c'est un recruteur
+    if (String(userResult.rows[0].account_type).toLowerCase() !== "recruiter") {
+      return res.status(403).json({ error: "Only recruiters can post jobs" });
+    }
 
+    // 2) Préparer les données pour PostgreSQL
+    // Convertir les tableaux en format PostgreSQL array si besoin
+    const hiringRolesArray = Array.isArray(hiring_roles) && hiring_roles.length > 0 ? hiring_roles : [];
+    const skillsArray = Array.isArray(skills) && skills.length > 0 ? skills : [];
+    const companyBenefitsArray = Array.isArray(company_benefits) && company_benefits.length > 0 ? company_benefits : [];
 
-    // 2) INSERT avec user_id
-    const [result] = await db.query(
+    // 3) INSERT avec user_id
+    const insertResult = await db.query(
       `INSERT INTO jobs
-       (user_id, name, company, localisation, description, contract_type, level, time_type, work_mode, field)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (user_id, name, position, company_name, location, description, 
+        contract_type, level, time_type, work_mode, field, salary_range,
+        requirements, benefits, hiring_roles, skills, hiring_process, 
+        company_benefits, additional_benefits, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 
+               $15, $16, $17, $18, $19, NOW())
+       RETURNING *`,
       [
         userId,
-        name,
-        company,
-        localisation || "",
+        name || "",
+        position || name || "",
+        company_name || "",
+        location || "",
         description || "",
         contract_type || "",
         level || "",
         time_type || "",
         work_mode || "",
         field || "",
+        salary_range || "",
+        requirements || "",
+        benefits || "",
+        // Champs supplémentaires - utilisation des tableaux préparés
+        hiringRolesArray,
+        skillsArray,
+        hiring_process || "",
+        companyBenefitsArray,
+        additional_benefits || ""
       ]
     );
 
-    console.log("🧾 Job inserted with id:", result.insertId);
+    console.log("Job inserted with id:", insertResult.rows[0].id);
 
-    // 3) renvoyer le job créé avec son id
-    const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [
-      result.insertId,
-    ]);
-
-    console.log("📤 Returning job:", rows[0]);
-
-    res.status(201).json(rows[0]);
+    res.status(201).json({
+      success: true,
+      job: insertResult.rows[0]
+    });
+    
   } catch (err) {
     console.error("Create job error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error name:", err.name);
+    console.error("Error message:", err.message);
+    console.error("Error detail:", err.detail); // PostgreSQL specific
+    console.error("Error code:", err.code); // PostgreSQL error code
+    console.error("Full error:", err);
+    
+    res.status(500).json({ 
+      success: false,
+      error: "Internal server error", 
+      message: err.message,
+      details: err.detail || err.toString(),
+      code: err.code
+    });
   }
 });
-
-
 
 module.exports = router;
