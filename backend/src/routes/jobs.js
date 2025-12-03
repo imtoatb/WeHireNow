@@ -60,7 +60,42 @@ router.get("/search", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error("Job search error:", err);
-    res.status(500).json({ error: "Internal server error", details: err.message });
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// GET /api/jobs/my  → tous les jobs postés par un utilisateur (via email)
+router.get("/my", async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // retrouver user_id à partir de l'email
+    const [userRows] = await db.query(
+      "SELECT id FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (!userRows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userId = userRows[0].id;
+
+    // récupérer tous les jobs avec ce user_id
+    const [jobs] = await db.query(
+      "SELECT * FROM jobs WHERE user_id = ? ORDER BY id DESC",
+      [userId]
+    );
+
+    res.json(jobs);
+  } catch (err) {
+    console.error("Get my jobs error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -84,12 +119,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ------------------------------------
-// POST /api/jobs → create job
-// ------------------------------------
+// POST /api/jobs  → créer une nouvelle offre
 router.post("/", async (req, res) => {
   try {
-    const { 
+    const {
+      email,            // 🔴 ON LIT L'EMAIL DU RECRUTEUR
       name,
       position, 
       company_name, 
@@ -104,144 +138,84 @@ router.post("/", async (req, res) => {
       requirements,
       benefits 
     } = req.body;
+      company,
+      localisation,
+      description,
+      contract_type,
+      level,
+      time_type,
+      work_mode,
+      field,
+    } = req.body;
 
-    if (!position || !company_name) {
-      return res.status(400).json({ error: "Position and company_name are required" });
+    console.log("📥 POST /api/jobs body:", req.body);
+
+    if (!email) {
+      console.log("❌ Missing email in body");
+      return res.status(400).json({ error: "Email is required" });
     }
 
-    const result = await db.query(
+    if (!name || !company) {
+      return res.status(400).json({ error: "Name and company are required" });
+    }
+
+    // 1) récupérer user_id depuis la table users (comme pour les profils)
+    const [userRows] = await db.query(
+      "SELECT id, account_type FROM users WHERE email = ?",
+      [email]
+    );
+
+    console.log("🔎 userRows for email", email, "=>", userRows);
+
+    if (!userRows.length) {
+      console.log("❌ User not found for email:", email);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userId = userRows[0].id;
+    console.log("✅ Resolved userId:", userId);
+
+    // (optionnel) vérifier que c'est bien un recruteur
+    // if (String(userRows[0].account_type).toLowerCase() !== "recruiter") {
+    //   return res.status(403).json({ error: "Only recruiters can post jobs" });
+    // }
+
+
+    // 2) INSERT avec user_id
+    const [result] = await db.query(
       `INSERT INTO jobs
-      (name, position, company_name, location, description, contract_type, level, 
-       time_type, work_mode, field, salary_range, requirements, benefits)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-      RETURNING *`,
+       (user_id, name, company, localisation, description, contract_type, level, time_type, work_mode, field)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        name || position,
-        position, 
-        company_name, 
-        location || '', 
-        description || '', 
-        contract_type || '', 
-        level || '', 
-        time_type || '', 
-        work_mode || '', 
-        field || '', 
-        salary_range || '',
-        requirements || '',
-        benefits || ''
+        userId,
+        name,
+        company,
+        localisation || "",
+        description || "",
+        contract_type || "",
+        level || "",
+        time_type || "",
+        work_mode || "",
+        field || "",
       ]
     );
 
-    res.status(201).json(result.rows[0]);
+    console.log("🧾 Job inserted with id:", result.insertId);
+
+    // 3) renvoyer le job créé avec son id
+    const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [
+      result.insertId,
+    ]);
+
+    console.log("📤 Returning job:", rows[0]);
+
+    res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Create job error:", err);
-    res.status(500).json({ error: "Internal server error", details: err.message });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// ------------------------------------
-// PUT /api/jobs/:id → update job
-// ------------------------------------
-router.put("/:id", async (req, res) => {
-  try {
-    const jobId = req.params.id;
-    const { 
-      name,
-      position, 
-      company_name, 
-      location, 
-      description, 
-      contract_type, 
-      level, 
-      time_type, 
-      work_mode, 
-      field, 
-      salary_range,
-      requirements,
-      benefits 
-    } = req.body;
 
-    // Vérifier si le job existe
-    const checkJob = await db.query("SELECT id FROM jobs WHERE id = $1", [jobId]);
-    if (!checkJob.rows.length) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    const result = await db.query(
-      `UPDATE jobs SET
-        name = COALESCE($1, name),
-        position = COALESCE($2, position),
-        company_name = COALESCE($3, company_name),
-        location = COALESCE($4, location),
-        description = COALESCE($5, description),
-        contract_type = COALESCE($6, contract_type),
-        level = COALESCE($7, level),
-        time_type = COALESCE($8, time_type),
-        work_mode = COALESCE($9, work_mode),
-        field = COALESCE($10, field),
-        salary_range = COALESCE($11, salary_range),
-        requirements = COALESCE($12, requirements),
-        benefits = COALESCE($13, benefits),
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $14
-      RETURNING *`,
-      [
-        name,
-        position, 
-        company_name, 
-        location, 
-        description, 
-        contract_type, 
-        level, 
-        time_type, 
-        work_mode, 
-        field, 
-        salary_range,
-        requirements,
-        benefits,
-        jobId
-      ]
-    );
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Update job error:", err);
-    res.status(500).json({ error: "Internal server error", details: err.message });
-  }
-});
-
-// ------------------------------------
-// DELETE /api/jobs/:id → delete job
-// ------------------------------------
-router.delete("/:id", async (req, res) => {
-  try {
-    const jobId = req.params.id;
-
-    // Vérifier si le job existe
-    const checkJob = await db.query("SELECT id FROM jobs WHERE id = $1", [jobId]);
-    if (!checkJob.rows.length) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    // Vérifier s'il y a des candidatures pour ce job
-    const checkApplications = await db.query("SELECT id FROM job_applications WHERE job_id = $1", [jobId]);
-    if (checkApplications.rows.length > 0) {
-      return res.status(400).json({ 
-        error: "Cannot delete job with applications", 
-        count: checkApplications.rows.length 
-      });
-    }
-
-    await db.query("DELETE FROM jobs WHERE id = $1", [jobId]);
-
-    res.json({ 
-      success: true, 
-      message: "Job deleted successfully" 
-    });
-  } catch (err) {
-    console.error("Delete job error:", err);
-    res.status(500).json({ error: "Internal server error", details: err.message });
-  }
-});
 
 module.exports = router;

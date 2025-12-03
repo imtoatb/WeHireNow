@@ -3,9 +3,9 @@ import { ref, computed } from 'vue'
 import api from '../services/api'
 import { jobApplications } from '../services/api' // NOUVEAU
 
-export const useAuthStore = defineStore('auth', {
+export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
+    user: JSON.parse(localStorage.getItem("user")) || null,
     error: null,
     applications: [] // NOUVEAU
   }),
@@ -49,19 +49,23 @@ export const useAuthStore = defineStore('auth', {
         
         this.error = null
       } catch (err) {
-        console.error(err)
-        this.error = err.response?.data?.error || 'Login failed'
+        console.error(err);
+        this.error = err.response?.data?.error || "Login failed";
       }
     },
 
     async register(email, password, account_type) {
       try {
-        const res = await api.post('/auth/register', { email, password, account_type })
-        this.user = res.data
-        this.error = null
+        const res = await api.post("/auth/register", {
+          email,
+          password,
+          account_type,
+        });
+        this.user = res.data;
+        this.error = null;
       } catch (err) {
-        console.error(err)
-        this.error = err.response?.data?.error || 'Registration failed'
+        console.error(err);
+        this.error = err.response?.data?.error || "Registration failed";
       }
     },
 
@@ -185,4 +189,4 @@ export const useAuthStore = defineStore('auth', {
       }
     }
   },
-})
+});
