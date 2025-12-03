@@ -15,6 +15,31 @@ SELECT * FROM users;
 SELECT * FROM jobs;
 SELECT * FROM job_applications;
 
+
+-- 3. Donner toutes les permissions à wehirenow_user
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO wehirenow_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO wehirenow_user;
+GRANT USAGE ON SCHEMA public TO wehirenow_user;
+
+-- 4. Pour les tables spécifiques :
+GRANT SELECT, INSERT, UPDATE, DELETE ON candidate_profiles TO wehirenow_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON recruiter_profiles TO wehirenow_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON users TO wehirenow_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON jobs TO wehirenow_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON job_applications TO wehirenow_user;
+
+-- 5. Donner aussi les droits sur les séquences (pour les auto-incréments) :
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO wehirenow_user;
+
+-- Spécifiquement pour chaque séquence :
+GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO wehirenow_user;
+GRANT USAGE, SELECT ON SEQUENCE jobs_id_seq TO wehirenow_user;
+GRANT USAGE, SELECT ON SEQUENCE job_applications_id_seq TO wehirenow_user;
+GRANT USAGE, SELECT ON SEQUENCE candidates_id_seq TO wehirenow_user;
+GRANT USAGE, SELECT ON SEQUENCE recruiters_id_seq TO wehirenow_user;
+
+
+
 Doit afficher :
 Routes profile chargées avec succès
 Routes /api/profile enregistrées avec succès  
@@ -25,7 +50,7 @@ Connecté à PostgreSQL
 # Terminal 1 - Backend
 cd backend
 npm install
-node server.js or npm start
+npm start
 
 
 
@@ -53,19 +78,18 @@ WeHireNow/
     ├── src/
     │   ├── components/
     │   │   │   ├── AddJob.vue
-    │   │   │   ├── ChoseAccount.vue
-    │   │   │   ├── CompanyJob.vue
     │   │   │   ├── FooterBar.vue
     │   │   │   ├── HeaderBar.vue
     │   │   │   ├── FormCandidate.vue           #form to create the account and modify it
     │   │   │   ├── FormRecruiter.vue
     │   │   │   ├── JobApplication.vue          #Candidate job applications's statistics and state
-    │   │   │   ├── JobDetails.vue              #Job offers used on jobSearch
+    │   │   │   ├── JobDetail.vue               #Job offers used on jobSearch
     │   │   │   ├── JobSearch.vue               #Research page
     │   │   │   ├── Login.vue
     │   │   │   ├── ProfilCandidate.vue
     │   │   │   ├── ProfilRecruiter.vue
     │   │   │   ├── RegisterForm.vue            #Redirect to the candidate/recruiter form
+    │   │   │   ├── ShowJob.vue                 #For recruiters (job posted)
     │   │   │   └── MainPage.vue                #Welcome page
     │   ├── stores/
     │   │   └── auth.js
@@ -82,53 +106,165 @@ WeHireNow/
 
 --------------------------------------------------------------------
 
-
-\l          -- Liste toutes les bases
-
-Nom           | Propriétaire     | Encodage | Collationnement
---------------|------------------|----------|-----------------
-postgres      | postgres         | UTF8     | French_France.1252
-template0     | postgres         | UTF8     | French_France.1252  
-template1     | postgres         | UTF8     | French_France.1252
-wehirenow_db  | wehirenow_user   | UTF8     | French_France.1252
-wehirenow_dev | postgres         | UTF8     | French_France.1252
-
-Signification :
-
-    postgres : Base de données par défaut
-
-    template0/template1 : Modèles pour créer de nouvelles bases
-
-    wehirenow_db : Votre base de production
-
-    wehirenow_dev : Votre base de développement
+DataBase :
+wehirenow_db=# \dt
+                   Liste des tables
+ Schéma |        Nom         | Type  |  Propriétaire
+--------+--------------------+-------+----------------
+ public | candidate_profiles | table | postgres
+ public | job_applications   | table | postgres
+ public | jobs               | table | postgres
+ public | recruiter_profiles | table | postgres
+ public | users              | table | wehirenow_user
+(5 lignes)
 
 
-
-\c wehirenow_db          -- Se connecter à la base
-\dt                      -- Lister les tables
-\d                       -- Voir tous les objets
-\d nom_table             -- Voir structure d'une table
-
-
-Liste des tables :
-Schéma | Nom  | Type  | Propriétaire
--------|------|-------|-------------
-public | users| table | wehirenow_user
-
-Liste des relations :
-Schéma | Nom         | Type     | Propriétaire
--------|-------------|----------|-------------
-public | users       | table    | wehirenow_user
-public | users_id_seq| séquence | wehirenow_user
-
-
-Signification :
-
-    users : Table principale contenant vos utilisateurs
-
-    users_id_seq : Séquence pour l'auto-incrément des IDs
+wehirenow_db=# \d users;
+                                            Table ½ public.users ╗
+    Colonne    |            Type             | Collationnement | NULL-able |            Par défaut
+---------------+-----------------------------+-----------------+-----------+-----------------------------------
+ id            | integer                     |                 | not null  | nextval('users_id_seq'::regclass)
+ email         | character varying(255)      |                 | not null  |
+ password_hash | character varying(255)      |                 | not null  |
+ account_type  | character varying(50)       |                 | not null  |
+ created_at    | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+Index :
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+Référencé par :
+    TABLE "candidate_profiles" CONSTRAINT "candidates_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "job_applications" CONSTRAINT "job_applications_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "recruiter_profiles" CONSTRAINT "recruiters_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 
 
+wehirenow_db=# \d jobs;
+                                            Table ½ public.jobs ╗
+    Colonne    |            Type             | Collationnement | NULL-able |            Par défaut
+---------------+-----------------------------+-----------------+-----------+----------------------------------
+ id            | integer                     |                 | not null  | nextval('jobs_id_seq'::regclass)
+ position      | character varying(255)      |                 | not null  |
+ company_name  | character varying(255)      |                 | not null  |
+ location      | character varying(255)      |                 |           |
+ contract_type | character varying(100)      |                 |           |
+ level         | character varying(100)      |                 |           |
+ time_type     | character varying(100)      |                 |           |
+ work_mode     | character varying(100)      |                 |           |
+ field         | character varying(100)      |                 |           |
+ salary_range  | character varying(100)      |                 |           |
+ description   | text                        |                 |           |
+ requirements  | text                        |                 |           |
+ benefits      | text                        |                 |           |
+ created_at    | timestamp without time zone |                 |           | now()
+ name          | character varying(255)      |                 |           |
+Index :
+    "jobs_pkey" PRIMARY KEY, btree (id)
+Référencé par :
+    TABLE "job_applications" CONSTRAINT "job_applications_job_id_fkey" FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 
-DELETE FROM users;        -- Delete all content from the table
+
+wehirenow_db=# \d job_applications;
+                                              Table ½ public.job_applications ╗
+     Colonne      |            Type             | Collationnement | NULL-able |                  Par défaut             
+------------------+-----------------------------+-----------------+-----------+----------------------------------------------
+ id               | integer                     |                 | not null  | nextval('job_applications_id_seq'::regclass)
+ user_id          | integer                     |                 |           |
+ job_id           | integer                     |                 |           |
+ status           | character varying(50)       |                 |           | 'pending'::character varying
+ application_date | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+ cover_letter     | text                        |                 |           |
+ updated_at       | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+Index :
+    "job_applications_pkey" PRIMARY KEY, btree (id)
+    "job_applications_user_id_job_id_key" UNIQUE CONSTRAINT, btree (user_id, job_id)
+Contraintes de vérification :
+    "job_applications_status_check" CHECK (status::text = ANY (ARRAY['pending'::character varying, 'reviewed'::character varying, 'accepted'::character varying, 'rejected'::character varying]::text[]))
+Contraintes de clés étrangères :
+    "job_applications_job_id_fkey" FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+    "job_applications_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+
+
+                                           Table ½ public.recruiter_profiles ╗
+       Colonne       |            Type             | Collationnement | NULL-able |               Par défaut             
+---------------------+-----------------------------+-----------------+-----------+----------------------------------------
+ id                  | integer                     |                 | not null  | nextval('recruiters_id_seq'::regclass)
+ user_id             | integer                     |                 | not null  |
+ first_name          | character varying(100)      |                 |           |
+ last_name           | character varying(100)      |                 |           |
+ position            | character varying(100)      |                 |           |
+ profile_picture     | text                        |                 |           |
+ bio                 | text                        |                 |           |
+ phone               | character varying(20)       |                 |           |
+ linkedin            | character varying(255)      |                 |           |
+ work_email          | character varying(255)      |                 |           |
+ company_name        | character varying(255)      |                 |           |
+ company_website     | character varying(255)      |                 |           |
+ industry            | character varying(100)      |                 |           |
+ company_size        | character varying(50)       |                 |           |
+ annual_revenue      | character varying(50)       |                 |           |
+ company_description | text                        |                 |           |
+ company_location    | character varying(255)      |                 |           |
+ founded_year        | integer                     |                 |           |
+ hiring_roles        | text[]                      |                 |           |
+ skills              | text[]                      |                 |           |
+ hiring_process      | text                        |                 |           |
+ company_benefits    | text[]                      |                 |           |
+ additional_benefits | text                        |                 |           |
+ created_at          | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+ updated_at          | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+Index :
+    "recruiters_pkey" PRIMARY KEY, btree (id)
+    "idx_recruiters_company_name" btree (company_name)
+    "idx_recruiters_industry" btree (industry)
+    "idx_recruiters_user_id" btree (user_id)
+    "recruiters_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+Contraintes de clés étrangères :
+    "recruiters_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+
+
+wehirenow_db=# \d candidate_profiles;
+                                         Table ½ public.candidate_profiles ╗
+     Colonne     |            Type             | Collationnement | NULL-able |               Par défaut
+-----------------+-----------------------------+-----------------+-----------+----------------------------------------
+ id              | integer                     |                 | not null  | nextval('candidates_id_seq'::regclass)
+ user_id         | integer                     |                 | not null  |
+ first_name      | character varying(100)      |                 |           |
+ last_name       | character varying(100)      |                 |           |
+ profile_picture | text                        |                 |           |
+ bio             | text                        |                 |           |
+ phone           | character varying(20)       |                 |           |
+ linkedin        | character varying(255)      |                 |           |
+ github          | character varying(255)      |                 |           |
+ skills          | text[]                      |                 |           |
+ experiences     | jsonb                       |                 |           | '[]'::jsonb
+ educations      | jsonb                       |                 |           | '[]'::jsonb
+ activities      | jsonb                       |                 |           | '[]'::jsonb
+ created_at      | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+ updated_at      | timestamp without time zone |                 |           | CURRENT_TIMESTAMP
+Index :
+    "candidates_pkey" PRIMARY KEY, btree (id)
+    "candidates_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+    "idx_candidates_skills" gin (skills)
+    "idx_candidates_user_id" btree (user_id)
+Contraintes de clés étrangères :
+    "candidates_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+
+
+
+
+
+
+        constraint_name        |     table_from     |                    constraint_definition
+-------------------------------+--------------------+--------------------------------------------------------------
+ candidates_user_id_fkey       | candidate_profiles | FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+ job_applications_user_id_fkey | job_applications   | FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+ job_applications_job_id_fkey  | job_applications   | FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+ recruiters_user_id_fkey       | recruiter_profiles | FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+
+
+
+
+
