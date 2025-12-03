@@ -11,7 +11,7 @@ import ProfilRecruiter from '../components/ProfilRecruiter.vue'
 import AddJob from '../components/AddJob.vue'
 import ShowJob from '../components/ShowJob.vue'
 import JobApplication from '../components/JobApplication.vue'
-import JobStats from "../views/JobStats.vue";
+import JobStats from "../components/JobStats.vue";
 
 const routes = [
   { path: '/', redirect: '/mainpage' },
