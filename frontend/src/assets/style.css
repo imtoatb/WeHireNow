@@ -1448,6 +1448,7 @@ textarea {
   margin-bottom: 1rem;
 }
 
+
 /* Job Info */
 .job-info {
   background: var(--gray-light);
@@ -1854,7 +1855,8 @@ textarea {
     align-items: center;
   }
 
-  .form-container {
+  .form-container, 
+  .job-form {
     margin: 30px 20px;
     padding: 25px;
   }
