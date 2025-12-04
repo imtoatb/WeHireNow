@@ -1,18 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
-import { jobApplications } from '../services/api' // NOUVEAU
+import { jobApplications } from '../services/api'
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: JSON.parse(localStorage.getItem("user")) || null,
     error: null,
-    applications: [] // NOUVEAU
+    applications: []
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.user,
-    // Nouveau getter pour les statistiques de candidature
     applicationStats: (state) => {
       if (!state.applications.length) return null;
       
@@ -72,7 +71,7 @@ export const useAuthStore = defineStore("auth", {
     async logout() {
       await api.post('/auth/logout')
       this.user = null
-      this.applications = [] // NOUVEAU
+      this.applications = []
       localStorage.removeItem('user')
     },
 
@@ -86,26 +85,59 @@ export const useAuthStore = defineStore("auth", {
         console.log('Sending profile to API...', {
           hasImage: !!profile.profile_picture,
           imageSize: profile.profile_picture ? profile.profile_picture.length : 0,
-          totalSkills: profile.skills ? profile.skills.length : 0,
-          totalExperiences: profile.experiences ? profile.experiences.length : 0
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          skillsCount: profile.skills?.length || 0,
+          experiencesCount: profile.experiences?.length || 0,
+          educationsCount: profile.educations?.length || 0,
+          activitiesCount: profile.activities?.length || 0
         });
 
-        const payload = { ...profile };
-        if (payload.profile_picture && payload.profile_picture.length > 300 * 1024) {
-          console.warn('Image too large, sending without image');
-          const imageSize = payload.profile_picture.length;
-          delete payload.profile_picture;
-          console.log(`Image removed (${imageSize} bytes)`);
-        }
-
-        const response = await api.post('/profile/save', {
+        // Prepare payload for candidate profile
+        const payload = {
           email: this.user.email,
-          ...payload
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          bio: profile.bio || '',
+          phone: profile.phone || '',
+          linkedin: profile.linkedin || '',
+          github: profile.github || '',
+          profile_picture: profile.profile_picture || '',
+          // Arrays - ensure they exist
+          skills: Array.isArray(profile.skills) ? profile.skills : [],
+          experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
+          educations: Array.isArray(profile.educations) ? profile.educations : [],
+          activities: Array.isArray(profile.activities) ? profile.activities : []
+        };
+
+        console.log('Final payload to send:', {
+          ...payload,
+          skillsSample: payload.skills.slice(0, 3),
+          experiencesSample: payload.experiences.length > 0 ? payload.experiences[0] : 'none',
+          profile_picture_length: payload.profile_picture ? payload.profile_picture.length : 0
         });
+
+        const response = await api.post('/profile/save', payload);
         
         if (response.data.success) {
-          console.log('Profile saved in PostgreSQL');
-          this.user.profile = { ...this.user.profile, ...payload };
+          console.log('Profile saved in PostgreSQL:', response.data.message);
+          
+          // Update local store with the saved profile data
+          this.user.profile = {
+            ...this.user.profile,
+            first_name: payload.first_name,
+            last_name: payload.last_name,
+            bio: payload.bio,
+            phone: payload.phone,
+            linkedin: payload.linkedin,
+            github: payload.github,
+            profile_picture: payload.profile_picture,
+            skills: payload.skills,
+            experiences: payload.experiences,
+            educations: payload.educations,
+            activities: payload.activities
+          };
+          
           localStorage.setItem('user', JSON.stringify(this.user));
           return response.data;
         } else {
@@ -114,29 +146,39 @@ export const useAuthStore = defineStore("auth", {
         
       } catch (error) {
         console.error('Error saving profile:', error);
+        console.error('Error response:', error.response?.data);
         
-        this.user.profile = { ...this.user.profile, ...profile };
-        localStorage.setItem('user', JSON.stringify(this.user));
-        
-        if (error.response?.status === 413) {
-          throw new Error('Request failed with status code 413 - Data too large. Please reduce image size or content.');
-        } else if (error.response?.data?.message) {
-          throw new Error(error.response.data.message);
-        } else {
-          throw new Error('Network error: ' + error.message);
+        let errorMessage = 'Failed to save profile';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.message) {
+          errorMessage = error.message;
         }
+        
+        throw new Error(errorMessage);
       }
     },
 
     async loadProfileFromDB() {
-      if (!this.user) return
+      if (!this.user) return;
       
       try {
-        const response = await api.get(`/profile/${this.user.email}`)
+        const response = await api.get(`/profile/${this.user.email}`);
         if (response.data.success && response.data.profile) {
-          this.user.profile = response.data.profile;
+          // Merge profile data into user object
+          this.user.profile = {
+            ...this.user.profile,
+            ...response.data.profile
+          };
+          
           localStorage.setItem('user', JSON.stringify(this.user));
-          console.log('Profile loaded from database');
+          console.log('Profile loaded from database:', {
+            firstName: this.user.profile.first_name,
+            skillsCount: this.user.profile.skills?.length || 0,
+            experiencesCount: this.user.profile.experiences?.length || 0
+          });
         } else {
           console.log('No profile found in database');
         }
@@ -147,9 +189,9 @@ export const useAuthStore = defineStore("auth", {
     },
 
     loadProfileFromLocalStorage() {
-      if (!this.user) return
+      if (!this.user) return;
       
-      const savedUser = JSON.parse(localStorage.getItem('user'))
+      const savedUser = JSON.parse(localStorage.getItem('user'));
       if (savedUser && savedUser.profile && savedUser.email === this.user.email) {
         console.log('Profile loaded from localStorage');
         this.user.profile = savedUser.profile;
@@ -158,7 +200,6 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    // NOUVEAU: Charger les candidatures
     async loadApplications() {
       if (!this.user || this.user.account_type !== 'candidate') return;
       
@@ -172,7 +213,6 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    // NOUVEAU: Créer une candidature
     async createApplication(jobId, coverLetter = null) {
       if (!this.user || this.user.account_type !== 'candidate') {
         throw new Error('Only candidates can apply to jobs');
@@ -180,7 +220,6 @@ export const useAuthStore = defineStore("auth", {
       
       try {
         const response = await jobApplications.createApplication(jobId, coverLetter);
-        // Recharger les candidatures après création
         await this.loadApplications();
         return response.data;
       } catch (error) {

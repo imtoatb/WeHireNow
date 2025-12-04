@@ -2,13 +2,22 @@
   <div class="form-container">
     <h1>Complete Your Candidate Profile</h1>
 
+    <!-- Error and Success Messages -->
+    <div v-if="error" class="error-message">
+      {{ error }}
+    </div>
+    
+    <div v-if="success" class="success-message">
+      Profile saved successfully! Redirecting...
+    </div>
+
     <!-- Personal Information -->
     <div class="form-section">
       <label>First Name *</label>
-      <input type="text" v-model="first_name" placeholder="Enter your first name" required />
+      <input type="text" v-model="profile.first_name" placeholder="Enter your first name" required />
       
       <label>Last Name *</label>
-      <input type="text" v-model="last_name" placeholder="Enter your last name" required />
+      <input type="text" v-model="profile.last_name" placeholder="Enter your last name" required />
     </div>
 
     <!-- Photo -->
@@ -16,8 +25,8 @@
       <label>Profile Picture</label>
       <input type="file" accept="image/*" @change="handleImage" />
       <!-- Image preview -->
-      <div v-if="profile_picture" class="image-preview">
-        <img :src="profile_picture" alt="Profile preview" class="preview-image" />
+      <div v-if="profile.profile_picture" class="image-preview">
+        <img :src="profile.profile_picture" alt="Profile preview" class="preview-image" />
         <button @click="removeImage" class="remove-image-btn">Remove Image</button>
       </div>
     </div>
@@ -25,7 +34,7 @@
     <!-- Bio -->
     <div class="form-section">
       <label>Bio *</label>
-      <textarea v-model="bio" placeholder="Tell us about yourself..." required></textarea>
+      <textarea v-model="profile.bio" placeholder="Tell us about yourself..." required></textarea>
     </div>
 
     <!-- Contact -->
@@ -34,13 +43,13 @@
       <input type="email" :value="auth.user.email" disabled />
       
       <label>Phone Number</label>
-      <input type="text" v-model="phone" placeholder="06..." />
+      <input type="text" v-model="profile.phone" placeholder="06..." />
 
       <label>LinkedIn</label>
-      <input type="text" v-model="linkedin" placeholder="https://linkedin.com/in/yourprofile" />
+      <input type="text" v-model="profile.linkedin" placeholder="https://linkedin.com/in/yourprofile" />
 
       <label>GitHub</label>
-      <input type="text" v-model="github" placeholder="https://github.com/yourusername" />
+      <input type="text" v-model="profile.github" placeholder="https://github.com/yourusername" />
     </div>
 
     <!-- Skills -->
@@ -53,7 +62,7 @@
       </div>
 
       <ul class="skill-list">
-        <li v-for="(skill, index) in skills" :key="index">
+        <li v-for="(skill, index) in profile.skills" :key="index">
           {{ skill }}
           <span class="remove" @click="removeSkill(index)">×</span>
         </li>
@@ -66,7 +75,7 @@
 
       <div
         class="experience-item"
-        v-for="(exp, index) in experiences"
+        v-for="(exp, index) in profile.experiences"
         :key="index"
       >
         <input v-model="exp.position" placeholder="Position" />
@@ -85,7 +94,7 @@
 
       <div
         class="education-item"
-        v-for="(edu, index) in education"
+        v-for="(edu, index) in profile.educations"
         :key="index"
       >
         <input v-model="edu.degree" placeholder="Degree (e.g., Bachelor of Science)" />
@@ -104,7 +113,7 @@
 
       <div
         class="activity-item"
-        v-for="(act, index) in activities"
+        v-for="(act, index) in profile.activities"
         :key="index"
       >
         <input v-model="act.name" placeholder="Activity Name" />
@@ -116,39 +125,42 @@
       <button @click="addActivity" class="add-btn">Add Activity</button>
     </div>
 
-    <button class="submit-btn" @click="submitProfile">Save Profile</button>
+    <button class="submit-btn" @click="submitProfile" :disabled="loading">
+      {{ loading ? "Saving..." : "Save Profile" }}
+    </button>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const auth = useAuthStore();
 
-// Personal Information - Pre-fill with existing data
-const first_name = ref("");
-const last_name = ref("");
-const bio = ref("");
-const phone = ref("");
-const linkedin = ref("");
-const github = ref("");
-const profile_picture = ref("");
+// Use reactive profile object
+const profile = reactive({
+  first_name: "",
+  last_name: "",
+  bio: "",
+  phone: "",
+  linkedin: "",
+  github: "",
+  profile_picture: "",
+  skills: [],
+  experiences: [],
+  educations: [],
+  activities: []
+});
 
 // Skills
-const skills = ref([]);
 const newSkill = ref("");
 
-// Experience
-const experiences = ref([]);
-
-// Education
-const education = ref([]);
-
-// Activities
-const activities = ref([]);
+// Form state
+const loading = ref(false);
+const error = ref("");
+const success = ref(false);
 
 // Load existing profile data when component mounts
 onMounted(() => {
@@ -159,34 +171,34 @@ onMounted(() => {
 
 // Function to load existing profile data
 const loadExistingProfileData = () => {
-  const profile = auth.user.profile;
+  const existingProfile = auth.user.profile;
   
-  first_name.value = profile.first_name || "";
-  last_name.value = profile.last_name || "";
-  bio.value = profile.bio || "";
-  phone.value = profile.phone || "";
-  linkedin.value = profile.linkedin || "";
-  github.value = profile.github || "";
-  profile_picture.value = profile.profile_picture || "";
-  skills.value = profile.skills || [];
-  experiences.value = profile.experiences || [];
-  education.value = profile.educations || [];
-  activities.value = profile.activities || [];
+  profile.first_name = existingProfile.first_name || "";
+  profile.last_name = existingProfile.last_name || "";
+  profile.bio = existingProfile.bio || "";
+  profile.phone = existingProfile.phone || "";
+  profile.linkedin = existingProfile.linkedin || "";
+  profile.github = existingProfile.github || "";
+  profile.profile_picture = existingProfile.profile_picture || "";
+  profile.skills = Array.isArray(existingProfile.skills) ? existingProfile.skills : [];
+  profile.experiences = Array.isArray(existingProfile.experiences) ? existingProfile.experiences : [];
+  profile.educations = Array.isArray(existingProfile.educations) ? existingProfile.educations : [];
+  profile.activities = Array.isArray(existingProfile.activities) ? existingProfile.activities : [];
 };
 
 function addSkill() {
   if (newSkill.value.trim() !== "") {
-    skills.value.push(newSkill.value.trim());
+    profile.skills.push(newSkill.value.trim());
     newSkill.value = "";
   }
 }
 
 function removeSkill(index) {
-  skills.value.splice(index, 1);
+  profile.skills.splice(index, 1);
 }
 
 function addExperience() {
-  experiences.value.push({ 
+  profile.experiences.push({ 
     position: "", 
     company: "", 
     duration: "", 
@@ -195,11 +207,11 @@ function addExperience() {
 }
 
 function removeExperience(index) {
-  experiences.value.splice(index, 1);
+  profile.experiences.splice(index, 1);
 }
 
 function addEducation() {
-  education.value.push({ 
+  profile.educations.push({ 
     degree: "", 
     institution: "", 
     duration: "", 
@@ -208,11 +220,11 @@ function addEducation() {
 }
 
 function removeEducation(index) {
-  education.value.splice(index, 1);
+  profile.educations.splice(index, 1);
 }
 
 function addActivity() {
-  activities.value.push({ 
+  profile.activities.push({ 
     name: "", 
     duration: "", 
     description: "" 
@@ -220,12 +232,12 @@ function addActivity() {
 }
 
 function removeActivity(index) {
-  activities.value.splice(index, 1);
+  profile.activities.splice(index, 1);
 }
 
 // Remove image
 function removeImage() {
-  profile_picture.value = "";
+  profile.profile_picture = "";
 }
 
 // Image compression function
@@ -298,7 +310,7 @@ async function handleImage(event) {
     
     const reader = new FileReader();
     reader.onload = (e) => {
-      profile_picture.value = e.target.result;
+      profile.profile_picture = e.target.result;
       console.log("Image converted to base64, size:", e.target.result.length, "bytes");
     };
     reader.onerror = (error) => {
@@ -312,73 +324,87 @@ async function handleImage(event) {
   }
 }
 
-// Submit with size validation
-async function submitProfile() {
-  // Basic validation
-  if (!first_name.value.trim()) {
-    alert('Please enter your first name');
-    return;
+// Validation function
+function validateProfileData(data) {
+  const errors = [];
+  
+  if (!data.first_name?.trim()) errors.push("First name is required");
+  if (!data.last_name?.trim()) errors.push("Last name is required");
+  if (!data.bio?.trim()) errors.push("Bio is required");
+  
+  // Ensure arrays are properly formatted
+  if (!Array.isArray(data.skills)) data.skills = [];
+  if (!Array.isArray(data.experiences)) data.experiences = [];
+  if (!Array.isArray(data.educations)) data.educations = [];
+  if (!Array.isArray(data.activities)) data.activities = [];
+  
+  // Limit array sizes
+  if (data.skills.length > 50) {
+    data.skills = data.skills.slice(0, 50);
   }
-
-  if (!last_name.value.trim()) {
-    alert('Please enter your last name');
-    return;
-  }
-
-  if (!bio.value.trim()) {
-    alert('Please add a bio');
-    return;
-  }
-
-  const payload = {
-    first_name: first_name.value,
-    last_name: last_name.value,
-    bio: bio.value,
-    phone: phone.value,
-    linkedin: linkedin.value,
-    github: github.value,
-    skills: skills.value,
-    experiences: experiences.value,
-    educations: education.value,
-    activities: activities.value,
-    email: auth.user.email,
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    validatedData: data
   };
+}
 
-  // Check image size before sending
-  if (profile_picture.value) {
-    const base64Size = profile_picture.value.length;
-    console.log("Final image size:", base64Size, "bytes");
-    
-    // If image exceeds 300KB, don't send it
-    if (base64Size > 300 * 1024) {
-      alert('Image too large after compression. Please use a smaller image or remove it.');
-      return;
-    }
-    
-    payload.profile_picture = profile_picture.value;
-  }
 
-  console.log("PROFILE DATA TO SEND:", {
-    hasImage: !!payload.profile_picture,
-    imageSize: payload.profile_picture ? payload.profile_picture.length : 0,
-    totalSkills: payload.skills.length,
-    totalExperiences: payload.experiences.length,
-    totalEducations: payload.educations.length,
-    totalActivities: payload.activities.length
-  });
+// In FormCandidate.vue, update the submitProfile function:
 
+async function submitProfile() {
   try {
-    await auth.setProfile(payload);
-    console.log("Profile saved successfully, redirecting...");
-    router.push("/profil-c");
-  } catch (error) {
-    console.error("Error saving profile:", error);
+    loading.value = true;
+    error.value = "";
+    success.value = false;
     
-    if (error.message.includes('413')) {
-      alert('The data is too large. Please try with a smaller profile picture or remove some content.');
-    } else {
-      alert("Error saving profile: " + error.message);
+    // Validate data
+    const validation = validateProfileData({ ...profile });
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '));
     }
+    
+    // Prepare data for sending - ensure all arrays exist
+    const dataToSend = {
+      ...validation.validatedData,
+      // Ensure all arrays are properly initialized
+      skills: Array.isArray(profile.skills) ? profile.skills : [],
+      experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
+      educations: Array.isArray(profile.educations) ? profile.educations : [],
+      activities: Array.isArray(profile.activities) ? profile.activities : []
+    };
+    
+    console.log('PROFILE DATA TO SEND:', {
+      firstName: dataToSend.first_name,
+      lastName: dataToSend.last_name,
+      skillsCount: dataToSend.skills.length,
+      experiencesCount: dataToSend.experiences.length,
+      educationsCount: dataToSend.educations.length,
+      activitiesCount: dataToSend.activities.length,
+      hasImage: !!dataToSend.profile_picture
+    });
+    
+    // Log sample data to verify
+    if (dataToSend.experiences.length > 0) {
+      console.log('Sample experience:', dataToSend.experiences[0]);
+    }
+    
+    // Save via store
+    await auth.setProfile(dataToSend);
+    
+    // Success
+    success.value = true;
+    setTimeout(() => {
+      router.push('/profil-c');
+    }, 1500);
+    
+  } catch (e) {
+    console.error('Error saving profile:', e);
+    error.value = e.message || "Failed to save profile";
+    success.value = false;
+  } finally {
+    loading.value = false;
   }
 }
 </script>

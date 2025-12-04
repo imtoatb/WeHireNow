@@ -141,8 +141,7 @@ import { onMounted, ref, watch } from "vue";
 const auth = useAuthStore();
 const router = useRouter();
 
-
-// Use reactive profile data
+// Use reactive profile data - CHANGE: Use reactive() instead of ref() for complex object
 const profile = ref({
   first_name: "",
   last_name: "",
@@ -171,8 +170,13 @@ onMounted(() => {
 // Watch for auth.user profile changes
 watch(() => auth.user?.profile, (newProfile) => {
   if (newProfile) {
-    console.log("Profile updated in store, refreshing display...");
-    profile.value = { ...newProfile };
+    console.log("Profile updated in store, refreshing display...", newProfile);
+    // FIX: Update the ref's value directly
+    Object.keys(profile.value).forEach(key => {
+      if (newProfile[key] !== undefined) {
+        profile.value[key] = newProfile[key];
+      }
+    });
   }
 }, { deep: true });
 
@@ -188,12 +192,29 @@ const loadProfileData = async () => {
     
     // Then update display with current data
     if (auth.user?.profile) {
-      profile.value = { ...auth.user.profile };
+      console.log("Auth user profile data:", auth.user.profile);
+      
+      // FIX: Update each field individually
+      const userProfile = auth.user.profile;
+      Object.keys(profile.value).forEach(key => {
+        if (userProfile[key] !== undefined) {
+          profile.value[key] = userProfile[key];
+        }
+      });
+      
       console.log("Recruiter profile data loaded:", profile.value);
     } else {
       console.log("No recruiter profile data found");
     }
   }
+
+    // Dans loadProfileData, après avoir chargé les données
+  console.log('Profile fields after loading:');
+  console.log('- First name:', profile.value.first_name);
+  console.log('- Company name:', profile.value.company_name);
+  console.log('- Position:', profile.value.position);
+  console.log('- Industry:', profile.value.industry);
+  console.log('- Full profile object:', JSON.stringify(profile.value));
 };
 
 // Logout function
@@ -202,7 +223,7 @@ const handleLogout = async () => {
     await auth.logout();
     router.push('/login');
   } catch (error) {
-    console.error('❌ Logout error:', error);
+    console.error('Logout error:', error);
   }
 };
 
@@ -228,13 +249,10 @@ const getInitials = (fullName) => {
 
 const handleAddJob = () => {
   router.push({ name: 'AddJob' })  
-}
-
+};
 
 const showJob = () => {
   router.push({ name: 'ShowJob' })  
-}
-
-
+};
 
 </script>
