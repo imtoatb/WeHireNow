@@ -1,6 +1,6 @@
 <template>
   <div class="show-jobs">
-    <button class="back-btn" @click="goBack">← Back to jobs</button>
+    <button class="back-btn" @click="goBack">←</button>
 
     <h2>Jobs you posted</h2>
 

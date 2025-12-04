@@ -1,5 +1,6 @@
 <template>
-  <div class="add-job">
+  <div class="form-container">
+    <button class="back-btn" @click="goBack">←</button>
     <h2>Post a new job</h2>
 
     <!-- FORM JOB -->
@@ -281,6 +282,10 @@ function addSkill() {
 
 function removeSkill(index) {
   form.skills.splice(index, 1)
+}
+
+function goBack() {
+  router.push("/jobsearch")
 }
 
 // Form state

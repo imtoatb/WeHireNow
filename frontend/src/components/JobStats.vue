@@ -1,6 +1,6 @@
 <template>
   <div class="job-stats">
-    <button class="back-btn" @click="goBack">← Back to your jobs</button>
+    <button class="back-btn" @click="goBack">←</button>
 
     <p v-if="loading" class="info">Loading statistics…</p>
     <p v-else-if="error" class="error">{{ error }}</p>
@@ -41,7 +41,7 @@
         </div>
       </div>
 
-      <!-- Liste des candidatures -->
+
       <div v-if="applications.length" class="applications-section">
         <h3>Applications</h3>
         
@@ -160,7 +160,7 @@ async function updateStatus(applicationId, newStatus) {
   try {
     updatingStatus.value = true;
     
-    // Utiliser la route spéciale pour recruteur
+    // use special route to apply
     await api.put(`/applications/${applicationId}/recruiter`, { status: newStatus });
     
     // Update local state
